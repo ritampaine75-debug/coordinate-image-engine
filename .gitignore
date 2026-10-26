@@ -1,0 +1,21 @@
+# OS and editor scratch files
+.DS_Store
+Thumbs.db
+*.log
+*~
+
+# Local tooling caches (core app has no build dependencies)
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+node_modules/
+
+# Exported/generated local artifacts should not be committed by default
+*.tmp
+
+# Sandbox scratch output
+.arena/

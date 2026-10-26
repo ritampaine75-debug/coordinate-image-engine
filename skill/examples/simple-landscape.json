@@ -1,0 +1,851 @@
+{
+  "protocol": "coordinate-image-v1",
+  "canvas": {
+    "width": 960,
+    "height": 640,
+    "background": {
+      "gradient": "sky"
+    }
+  },
+  "metadata": {
+    "title": "Sunset Valley",
+    "description": "A layered sunset landscape with reflected light, mountain silhouettes, pines, and ripples.",
+    "tags": [
+      "landscape",
+      "sunset",
+      "gradients",
+      "nature"
+    ]
+  },
+  "gradients": {
+    "sky": {
+      "type": "linear",
+      "x1": 0,
+      "y1": 0,
+      "x2": 0,
+      "y2": 640,
+      "stops": [
+        {
+          "offset": 0,
+          "color": "#162943"
+        },
+        {
+          "offset": 0.48,
+          "color": "#8C5878"
+        },
+        {
+          "offset": 0.76,
+          "color": "#E88B62"
+        },
+        {
+          "offset": 1,
+          "color": "#F8C27A"
+        }
+      ]
+    },
+    "sunGlow": {
+      "type": "radial",
+      "cx": 720,
+      "cy": 164,
+      "r": 176,
+      "stops": [
+        {
+          "offset": 0,
+          "color": "#FFE7AA"
+        },
+        {
+          "offset": 0.4,
+          "color": "#F9B45C88"
+        },
+        {
+          "offset": 1,
+          "color": "#F9B45C00"
+        }
+      ]
+    },
+    "water": {
+      "type": "linear",
+      "x1": 0,
+      "y1": 442,
+      "x2": 0,
+      "y2": 640,
+      "stops": [
+        {
+          "offset": 0,
+          "color": "#345B73"
+        },
+        {
+          "offset": 0.48,
+          "color": "#1B3A52"
+        },
+        {
+          "offset": 1,
+          "color": "#0A1B2A"
+        }
+      ]
+    },
+    "foreground": {
+      "type": "linear",
+      "x1": 0,
+      "y1": 470,
+      "x2": 0,
+      "y2": 640,
+      "stops": [
+        {
+          "offset": 0,
+          "color": "#20333C"
+        },
+        {
+          "offset": 1,
+          "color": "#07121B"
+        }
+      ]
+    }
+  },
+  "elements": [
+    {
+      "id": "group-1",
+      "type": "group",
+      "children": [
+        {
+          "id": "circle-1",
+          "type": "circle",
+          "x": 76,
+          "y": 74,
+          "radius": 2,
+          "fill": "#FFF2C8",
+          "opacity": 0.75
+        },
+        {
+          "id": "circle-2",
+          "type": "circle",
+          "x": 138,
+          "y": 116,
+          "radius": 1.6,
+          "fill": "#FFF2C8",
+          "opacity": 0.75
+        },
+        {
+          "id": "circle-3",
+          "type": "circle",
+          "x": 191,
+          "y": 60,
+          "radius": 2.2,
+          "fill": "#FFF2C8",
+          "opacity": 0.75
+        },
+        {
+          "id": "circle-4",
+          "type": "circle",
+          "x": 278,
+          "y": 100,
+          "radius": 1.4,
+          "fill": "#FFF2C8",
+          "opacity": 0.75
+        },
+        {
+          "id": "circle-5",
+          "type": "circle",
+          "x": 357,
+          "y": 52,
+          "radius": 1.8,
+          "fill": "#FFF2C8",
+          "opacity": 0.75
+        },
+        {
+          "id": "circle-6",
+          "type": "circle",
+          "x": 446,
+          "y": 91,
+          "radius": 2,
+          "fill": "#FFF2C8",
+          "opacity": 0.75
+        },
+        {
+          "id": "circle-7",
+          "type": "circle",
+          "x": 548,
+          "y": 48,
+          "radius": 1.5,
+          "fill": "#FFF2C8",
+          "opacity": 0.75
+        },
+        {
+          "id": "circle-8",
+          "type": "circle",
+          "x": 836,
+          "y": 87,
+          "radius": 1.8,
+          "fill": "#FFF2C8",
+          "opacity": 0.75
+        },
+        {
+          "id": "circle-9",
+          "type": "circle",
+          "x": 903,
+          "y": 52,
+          "radius": 1.2,
+          "fill": "#FFF2C8",
+          "opacity": 0.75
+        }
+      ]
+    },
+    {
+      "id": "circle-10",
+      "type": "circle",
+      "x": 720,
+      "y": 164,
+      "radius": 176,
+      "fill": {
+        "gradient": "sunGlow"
+      },
+      "opacity": 0.9
+    },
+    {
+      "id": "circle-11",
+      "type": "circle",
+      "x": 720,
+      "y": 164,
+      "radius": 68,
+      "fill": "#FFE2A3",
+      "shadow": {
+        "color": "#FFB35C",
+        "blur": 48,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "opacity": 0.98
+    },
+    {
+      "id": "polygon-1",
+      "type": "polygon",
+      "points": [
+        [
+          0,
+          346
+        ],
+        [
+          126,
+          230
+        ],
+        [
+          225,
+          304
+        ],
+        [
+          335,
+          184
+        ],
+        [
+          472,
+          342
+        ],
+        [
+          572,
+          254
+        ],
+        [
+          706,
+          356
+        ],
+        [
+          837,
+          236
+        ],
+        [
+          960,
+          334
+        ],
+        [
+          960,
+          430
+        ],
+        [
+          0,
+          430
+        ]
+      ],
+      "fill": "#3A3150",
+      "opacity": 0.72
+    },
+    {
+      "id": "polygon-2",
+      "type": "polygon",
+      "points": [
+        [
+          0,
+          382
+        ],
+        [
+          118,
+          298
+        ],
+        [
+          234,
+          370
+        ],
+        [
+          358,
+          272
+        ],
+        [
+          488,
+          394
+        ],
+        [
+          610,
+          300
+        ],
+        [
+          739,
+          402
+        ],
+        [
+          862,
+          306
+        ],
+        [
+          960,
+          382
+        ],
+        [
+          960,
+          458
+        ],
+        [
+          0,
+          458
+        ]
+      ],
+      "fill": "#282A44",
+      "opacity": 0.92
+    },
+    {
+      "id": "path-1",
+      "type": "path",
+      "d": "M 0 420 C 140 390 250 432 386 412 C 530 390 650 437 960 405 L 960 465 L 0 465 Z",
+      "fill": "#18243A",
+      "opacity": 0.72
+    },
+    {
+      "id": "rectangle-1",
+      "type": "rectangle",
+      "x": 0,
+      "y": 442,
+      "width": 960,
+      "height": 198,
+      "fill": {
+        "gradient": "water"
+      }
+    },
+    {
+      "id": "ellipse-1",
+      "type": "ellipse",
+      "x": 720,
+      "y": 470,
+      "radiusX": 92,
+      "radiusY": 12,
+      "fill": "#FFD18A",
+      "opacity": 0.24
+    },
+    {
+      "id": "ellipse-2",
+      "type": "ellipse",
+      "x": 720,
+      "y": 505,
+      "radiusX": 154,
+      "radiusY": 10,
+      "fill": "#F6A85F",
+      "opacity": 0.18
+    },
+    {
+      "id": "ellipse-3",
+      "type": "ellipse",
+      "x": 720,
+      "y": 548,
+      "radiusX": 205,
+      "radiusY": 9,
+      "fill": "#F6A85F",
+      "opacity": 0.11
+    },
+    {
+      "id": "line-1",
+      "type": "line",
+      "x1": 92,
+      "y1": 474,
+      "x2": 270,
+      "y2": 474,
+      "stroke": "#B7DCE1",
+      "strokeWidth": 2,
+      "opacity": 0.28,
+      "lineCap": "round"
+    },
+    {
+      "id": "line-2",
+      "type": "line",
+      "x1": 156,
+      "y1": 496,
+      "x2": 266,
+      "y2": 496,
+      "stroke": "#B7DCE1",
+      "strokeWidth": 2,
+      "opacity": 0.22,
+      "lineCap": "round"
+    },
+    {
+      "id": "line-3",
+      "type": "line",
+      "x1": 62,
+      "y1": 522,
+      "x2": 204,
+      "y2": 522,
+      "stroke": "#B7DCE1",
+      "strokeWidth": 2,
+      "opacity": 0.18,
+      "lineCap": "round"
+    },
+    {
+      "id": "line-4",
+      "type": "line",
+      "x1": 384,
+      "y1": 548,
+      "x2": 482,
+      "y2": 548,
+      "stroke": "#B7DCE1",
+      "strokeWidth": 2,
+      "opacity": 0.16,
+      "lineCap": "round"
+    },
+    {
+      "id": "line-5",
+      "type": "line",
+      "x1": 720,
+      "y1": 576,
+      "x2": 900,
+      "y2": 576,
+      "stroke": "#B7DCE1",
+      "strokeWidth": 2,
+      "opacity": 0.13,
+      "lineCap": "round"
+    },
+    {
+      "id": "line-6",
+      "type": "line",
+      "x1": 520,
+      "y1": 603,
+      "x2": 640,
+      "y2": 603,
+      "stroke": "#B7DCE1",
+      "strokeWidth": 2,
+      "opacity": 0.11,
+      "lineCap": "round"
+    },
+    {
+      "id": "path-2",
+      "type": "path",
+      "d": "M 0 520 C 110 480 192 544 292 504 C 390 466 450 518 540 498 C 670 468 772 534 960 480 L 960 640 L 0 640 Z",
+      "fill": {
+        "gradient": "foreground"
+      }
+    },
+    {
+      "id": "path-3",
+      "type": "path",
+      "d": "M 960 512 C 830 486 748 540 652 510 C 578 487 526 510 462 538 C 590 540 690 584 960 640 L 960 512 Z",
+      "fill": "#0B1722",
+      "opacity": 0.88
+    },
+    {
+      "id": "group-8",
+      "type": "group",
+      "children": [
+        {
+          "id": "group-2",
+          "type": "group",
+          "transform": {
+            "translate": [
+              60,
+              490
+            ],
+            "scale": [
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "id": "rectangle-2",
+              "type": "rectangle",
+              "x": -5,
+              "y": 18,
+              "width": 10,
+              "height": 58,
+              "fill": "#101A20"
+            },
+            {
+              "id": "polygon-3",
+              "type": "polygon",
+              "points": [
+                [
+                  0,
+                  -74
+                ],
+                [
+                  -36,
+                  8
+                ],
+                [
+                  -18,
+                  4
+                ],
+                [
+                  -46,
+                  48
+                ],
+                [
+                  46,
+                  48
+                ],
+                [
+                  18,
+                  4
+                ],
+                [
+                  36,
+                  8
+                ]
+              ],
+              "fill": "#10202A"
+            }
+          ]
+        },
+        {
+          "id": "group-3",
+          "type": "group",
+          "transform": {
+            "translate": [
+              112,
+              476
+            ],
+            "scale": [
+              0.78,
+              0.78
+            ]
+          },
+          "children": [
+            {
+              "id": "rectangle-3",
+              "type": "rectangle",
+              "x": -5,
+              "y": 18,
+              "width": 10,
+              "height": 58,
+              "fill": "#101A20"
+            },
+            {
+              "id": "polygon-4",
+              "type": "polygon",
+              "points": [
+                [
+                  0,
+                  -74
+                ],
+                [
+                  -36,
+                  8
+                ],
+                [
+                  -18,
+                  4
+                ],
+                [
+                  -46,
+                  48
+                ],
+                [
+                  46,
+                  48
+                ],
+                [
+                  18,
+                  4
+                ],
+                [
+                  36,
+                  8
+                ]
+              ],
+              "fill": "#10202A"
+            }
+          ]
+        },
+        {
+          "id": "group-4",
+          "type": "group",
+          "transform": {
+            "translate": [
+              158,
+              502
+            ],
+            "scale": [
+              0.9,
+              0.9
+            ]
+          },
+          "children": [
+            {
+              "id": "rectangle-4",
+              "type": "rectangle",
+              "x": -5,
+              "y": 18,
+              "width": 10,
+              "height": 58,
+              "fill": "#101A20"
+            },
+            {
+              "id": "polygon-5",
+              "type": "polygon",
+              "points": [
+                [
+                  0,
+                  -74
+                ],
+                [
+                  -36,
+                  8
+                ],
+                [
+                  -18,
+                  4
+                ],
+                [
+                  -46,
+                  48
+                ],
+                [
+                  46,
+                  48
+                ],
+                [
+                  18,
+                  4
+                ],
+                [
+                  36,
+                  8
+                ]
+              ],
+              "fill": "#10202A"
+            }
+          ]
+        },
+        {
+          "id": "group-5",
+          "type": "group",
+          "transform": {
+            "translate": [
+              850,
+              483
+            ],
+            "scale": [
+              0.82,
+              0.82
+            ]
+          },
+          "children": [
+            {
+              "id": "rectangle-5",
+              "type": "rectangle",
+              "x": -5,
+              "y": 18,
+              "width": 10,
+              "height": 58,
+              "fill": "#101A20"
+            },
+            {
+              "id": "polygon-6",
+              "type": "polygon",
+              "points": [
+                [
+                  0,
+                  -74
+                ],
+                [
+                  -36,
+                  8
+                ],
+                [
+                  -18,
+                  4
+                ],
+                [
+                  -46,
+                  48
+                ],
+                [
+                  46,
+                  48
+                ],
+                [
+                  18,
+                  4
+                ],
+                [
+                  36,
+                  8
+                ]
+              ],
+              "fill": "#10202A"
+            }
+          ]
+        },
+        {
+          "id": "group-6",
+          "type": "group",
+          "transform": {
+            "translate": [
+              900,
+              500
+            ],
+            "scale": [
+              1.06,
+              1.06
+            ]
+          },
+          "children": [
+            {
+              "id": "rectangle-6",
+              "type": "rectangle",
+              "x": -5,
+              "y": 18,
+              "width": 10,
+              "height": 58,
+              "fill": "#101A20"
+            },
+            {
+              "id": "polygon-7",
+              "type": "polygon",
+              "points": [
+                [
+                  0,
+                  -74
+                ],
+                [
+                  -36,
+                  8
+                ],
+                [
+                  -18,
+                  4
+                ],
+                [
+                  -46,
+                  48
+                ],
+                [
+                  46,
+                  48
+                ],
+                [
+                  18,
+                  4
+                ],
+                [
+                  36,
+                  8
+                ]
+              ],
+              "fill": "#10202A"
+            }
+          ]
+        },
+        {
+          "id": "group-7",
+          "type": "group",
+          "transform": {
+            "translate": [
+              938,
+              478
+            ],
+            "scale": [
+              0.72,
+              0.72
+            ]
+          },
+          "children": [
+            {
+              "id": "rectangle-7",
+              "type": "rectangle",
+              "x": -5,
+              "y": 18,
+              "width": 10,
+              "height": 58,
+              "fill": "#101A20"
+            },
+            {
+              "id": "polygon-8",
+              "type": "polygon",
+              "points": [
+                [
+                  0,
+                  -74
+                ],
+                [
+                  -36,
+                  8
+                ],
+                [
+                  -18,
+                  4
+                ],
+                [
+                  -46,
+                  48
+                ],
+                [
+                  46,
+                  48
+                ],
+                [
+                  18,
+                  4
+                ],
+                [
+                  36,
+                  8
+                ]
+              ],
+              "fill": "#10202A"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rounded_rectangle-1",
+      "type": "rounded-rectangle",
+      "x": 28,
+      "y": 572,
+      "width": 178,
+      "height": 40,
+      "radius": 20,
+      "fill": "#0B1722",
+      "stroke": "#89A7A9",
+      "strokeWidth": 1,
+      "opacity": 0.72
+    },
+    {
+      "id": "text-1",
+      "type": "text",
+      "x": 42,
+      "y": 598,
+      "text": "EVENING VALLEY",
+      "fontSize": 15,
+      "fontFamily": "sans-serif",
+      "fontWeight": "600",
+      "fill": "#D4E3DC",
+      "align": "left",
+      "baseline": "alphabetic"
+    }
+  ]
+}

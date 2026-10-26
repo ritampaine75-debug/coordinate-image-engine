@@ -1,0 +1,308 @@
+{
+  "protocol": "coordinate-image-v1",
+  "canvas": {
+    "width": 512,
+    "height": 512,
+    "background": "#0B1020"
+  },
+  "metadata": {
+    "title": "Coordinate App Icon",
+    "description": "A crisp, scalable app icon with a coordinate glyph, luminous core, grid, rounded tile, and shadow.",
+    "tags": [
+      "app-icon",
+      "glyph",
+      "grid",
+      "gradient"
+    ]
+  },
+  "gradients": {
+    "tile": {
+      "type": "linear",
+      "x1": 64,
+      "y1": 48,
+      "x2": 448,
+      "y2": 464,
+      "stops": [
+        {
+          "offset": 0,
+          "color": "#214C72"
+        },
+        {
+          "offset": 0.48,
+          "color": "#102A4B"
+        },
+        {
+          "offset": 1,
+          "color": "#081326"
+        }
+      ]
+    },
+    "core": {
+      "type": "radial",
+      "cx": 218,
+      "cy": 190,
+      "r": 158,
+      "stops": [
+        {
+          "offset": 0,
+          "color": "#C5F8FF"
+        },
+        {
+          "offset": 0.35,
+          "color": "#47C5E8"
+        },
+        {
+          "offset": 1,
+          "color": "#15558C"
+        }
+      ]
+    }
+  },
+  "elements": [
+    {
+      "id": "rounded_rectangle-1",
+      "type": "rounded-rectangle",
+      "x": 32,
+      "y": 32,
+      "width": 448,
+      "height": 448,
+      "radius": 112,
+      "fill": {
+        "gradient": "tile"
+      },
+      "stroke": "#FFFFFF22",
+      "strokeWidth": 2,
+      "shadow": {
+        "color": "#00000099",
+        "blur": 34,
+        "offsetX": 0,
+        "offsetY": 18
+      }
+    },
+    {
+      "id": "rounded_rectangle-2",
+      "type": "rounded-rectangle",
+      "x": 60,
+      "y": 60,
+      "width": 392,
+      "height": 392,
+      "radius": 92,
+      "fill": "#FFFFFF08",
+      "stroke": "#FFFFFF1F",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "group-1",
+      "type": "group",
+      "children": [
+        {
+          "id": "line-1",
+          "type": "line",
+          "x1": 160,
+          "y1": 96,
+          "x2": 160,
+          "y2": 416,
+          "stroke": "#C8F4FF",
+          "strokeWidth": 1,
+          "opacity": 0.11
+        },
+        {
+          "id": "line-2",
+          "type": "line",
+          "x1": 96,
+          "y1": 160,
+          "x2": 416,
+          "y2": 160,
+          "stroke": "#C8F4FF",
+          "strokeWidth": 1,
+          "opacity": 0.11
+        },
+        {
+          "id": "line-3",
+          "type": "line",
+          "x1": 208,
+          "y1": 96,
+          "x2": 208,
+          "y2": 416,
+          "stroke": "#C8F4FF",
+          "strokeWidth": 1,
+          "opacity": 0.11
+        },
+        {
+          "id": "line-4",
+          "type": "line",
+          "x1": 96,
+          "y1": 208,
+          "x2": 416,
+          "y2": 208,
+          "stroke": "#C8F4FF",
+          "strokeWidth": 1,
+          "opacity": 0.11
+        },
+        {
+          "id": "line-5",
+          "type": "line",
+          "x1": 256,
+          "y1": 96,
+          "x2": 256,
+          "y2": 416,
+          "stroke": "#C8F4FF",
+          "strokeWidth": 1,
+          "opacity": 0.11
+        },
+        {
+          "id": "line-6",
+          "type": "line",
+          "x1": 96,
+          "y1": 256,
+          "x2": 416,
+          "y2": 256,
+          "stroke": "#C8F4FF",
+          "strokeWidth": 1,
+          "opacity": 0.11
+        },
+        {
+          "id": "line-7",
+          "type": "line",
+          "x1": 304,
+          "y1": 96,
+          "x2": 304,
+          "y2": 416,
+          "stroke": "#C8F4FF",
+          "strokeWidth": 1,
+          "opacity": 0.11
+        },
+        {
+          "id": "line-8",
+          "type": "line",
+          "x1": 96,
+          "y1": 304,
+          "x2": 416,
+          "y2": 304,
+          "stroke": "#C8F4FF",
+          "strokeWidth": 1,
+          "opacity": 0.11
+        },
+        {
+          "id": "line-9",
+          "type": "line",
+          "x1": 352,
+          "y1": 96,
+          "x2": 352,
+          "y2": 416,
+          "stroke": "#C8F4FF",
+          "strokeWidth": 1,
+          "opacity": 0.11
+        },
+        {
+          "id": "line-10",
+          "type": "line",
+          "x1": 96,
+          "y1": 352,
+          "x2": 416,
+          "y2": 352,
+          "stroke": "#C8F4FF",
+          "strokeWidth": 1,
+          "opacity": 0.11
+        }
+      ]
+    },
+    {
+      "id": "circle-1",
+      "type": "circle",
+      "x": 256,
+      "y": 236,
+      "radius": 122,
+      "fill": {
+        "gradient": "core"
+      },
+      "stroke": "#A9F2FF",
+      "strokeWidth": 3,
+      "shadow": {
+        "color": "#4BC8F0",
+        "blur": 36
+      }
+    },
+    {
+      "id": "path-1",
+      "type": "path",
+      "d": "M 178 272 C 184 212 218 178 258 178 C 310 178 342 212 342 264 C 342 312 312 344 264 344 C 222 344 196 326 180 294",
+      "stroke": "#06182B",
+      "strokeWidth": 24,
+      "opacity": 0.35,
+      "lineCap": "round"
+    },
+    {
+      "id": "path-2",
+      "type": "path",
+      "d": "M 178 260 C 184 200 218 166 258 166 C 310 166 342 200 342 252 C 342 300 312 332 264 332 C 222 332 196 314 180 282",
+      "stroke": "#E6FCFF",
+      "strokeWidth": 16,
+      "lineCap": "round"
+    },
+    {
+      "id": "line-11",
+      "type": "line",
+      "x1": 150,
+      "y1": 364,
+      "x2": 362,
+      "y2": 364,
+      "stroke": "#A5ECFA",
+      "strokeWidth": 10,
+      "lineCap": "round"
+    },
+    {
+      "id": "line-12",
+      "type": "line",
+      "x1": 150,
+      "y1": 364,
+      "x2": 150,
+      "y2": 152,
+      "stroke": "#A5ECFA",
+      "strokeWidth": 10,
+      "lineCap": "round"
+    },
+    {
+      "id": "circle-2",
+      "type": "circle",
+      "x": 150,
+      "y": 152,
+      "radius": 11,
+      "fill": "#FFFFFF",
+      "stroke": "#4EB9D8",
+      "strokeWidth": 4
+    },
+    {
+      "id": "circle-3",
+      "type": "circle",
+      "x": 362,
+      "y": 364,
+      "radius": 11,
+      "fill": "#FFFFFF",
+      "stroke": "#4EB9D8",
+      "strokeWidth": 4
+    },
+    {
+      "id": "circle-4",
+      "type": "circle",
+      "x": 256,
+      "y": 236,
+      "radius": 11,
+      "fill": "#FFFFFF",
+      "stroke": "#4EB9D8",
+      "strokeWidth": 4
+    },
+    {
+      "id": "text-1",
+      "type": "text",
+      "x": 256,
+      "y": 430,
+      "text": "CIE",
+      "fontSize": 34,
+      "fontFamily": "monospace",
+      "fontWeight": "800",
+      "fill": "#DDF8FF",
+      "align": "center"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+name: Validate JSON
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  schema-and-documents:
+    name: Schema and example validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install free JSON Schema validator
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install jsonschema==4.23.0
+
+      - name: Verify generated inline assets
+        run: python tools/update-index-assets.py --check
+
+      - name: Validate schema, examples, and negative cases
+        run: python tests/validate_documents.py
+
+  runtime-renderer:
+    name: Runtime validator and renderer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run dependency-free runtime tests
+        run: node tests/runtime-validator.test.mjs
