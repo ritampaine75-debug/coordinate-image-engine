@@ -17,31 +17,31 @@ A large language model writes a strict JSON document describing shapes, colors, 
 
 ## Contents
 
-1. [The problem](#the-problem)
-2. [How it works](#how-it-works)
-3. [Architecture](#architecture)
-4. [Why a text model can do this](#why-a-text-model-can-do-this)
-5. [Repository structure](#repository-structure)
-6. [Quick start](#quick-start)
-7. [Open the testing website](#open-the-testing-website)
-8. [Use the universal master prompt](#use-the-universal-master-prompt)
-9. [Install the AI skill](#install-the-ai-skill)
-10. [Optional `/json-image` command](#optional-json-image-command)
-11. [Paste, upload, validate, and render](#paste-upload-validate-and-render)
-12. [Protocol specification overview](#protocol-specification-overview)
-13. [Example input and output](#example-input-and-output)
-14. [Visual quality strategy](#visual-quality-strategy)
-15. [Export and import actions](#export-and-import-actions)
-16. [Model compatibility](#model-compatibility)
-17. [Security and privacy](#security-and-privacy)
-18. [Performance considerations](#performance-considerations)
-19. [Known limitations](#known-limitations)
-20. [Automated validation and tests](#automated-validation-and-tests)
-21. [Troubleshooting](#troubleshooting)
-22. [Roadmap](#roadmap)
-23. [Contributing](#contributing)
-24. [GitHub Pages deployment](#github-pages-deployment)
-25. [License](#license)
+1. [The problem](#1-the-problem)
+2. [How it works](#2-how-it-works)
+3. [Architecture](#3-architecture)
+4. [Why a text model can do this](#4-why-a-text-model-can-do-this)
+5. [Repository structure](#5-repository-structure)
+6. [Quick start](#6-quick-start)
+7. [Open the testing website](#7-open-the-testing-website)
+8. [Use the universal master prompt](#8-use-the-universal-master-prompt)
+9. [Install the AI skill](#9-install-the-ai-skill)
+10. [Optional `/json-image` command](#10-optional-json-image-command)
+11. [Paste, upload, validate, and render](#11-paste-upload-validate-and-render)
+12. [Protocol specification overview](#12-protocol-specification-overview)
+13. [Example input and output](#13-example-input-and-output)
+14. [Visual quality strategy](#14-visual-quality-strategy)
+15. [Export and import actions](#15-export-and-import-actions)
+16. [Model compatibility](#16-model-compatibility)
+17. [Security and privacy](#17-security-and-privacy)
+18. [Performance considerations](#18-performance-considerations)
+19. [Known limitations](#19-known-limitations)
+20. [Automated validation and tests](#20-automated-validation-and-tests)
+21. [Troubleshooting](#21-troubleshooting)
+22. [Roadmap](#22-roadmap)
+23. [Contributing](#23-contributing)
+24. [GitHub Pages deployment](#24-github-pages-deployment)
+25. [License](#25-license)
 
 ---
 
@@ -183,7 +183,7 @@ The application itself is editable from GitHub's web interface: `index.html`, Ma
 
 ## 7. Open the testing website
 
-Open [`index.html`](index.html) directly, or follow [GitHub Pages deployment](#github-pages-deployment). The interface provides:
+Open [`index.html`](index.html) directly, or follow [GitHub Pages deployment](#24-github-pages-deployment). The interface provides:
 
 - a prompt and skill-instructions panel;
 - an editable JSON paste area;
@@ -487,6 +487,7 @@ Local commands:
 
 ```sh
 python3 tools/update-index-assets.py --check
+python3 tests/check_markdown_links.py
 python3 -m pip install jsonschema
 python3 tests/validate_documents.py
 node tests/runtime-validator.test.mjs
