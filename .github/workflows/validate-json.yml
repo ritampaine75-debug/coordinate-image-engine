@@ -29,6 +29,9 @@ jobs:
       - name: Verify generated inline assets
         run: python tools/update-index-assets.py --check
 
+      - name: Check Markdown anchors and relative links
+        run: python tests/check_markdown_links.py
+
       - name: Validate schema, examples, and negative cases
         run: python tests/validate_documents.py
 
