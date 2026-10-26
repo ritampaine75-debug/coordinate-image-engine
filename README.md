@@ -552,6 +552,8 @@ When changing the protocol, update the schema, runtime validator, renderer, docs
 
 No build command, Jekyll step, secret, or environment variable is needed. To avoid Jekyll processing, you may optionally add an empty `.nojekyll` file, but the app does not depend on it.
 
+Pages must be enabled once by a repository administrator. An automated deployment workflow cannot create the Pages site when the connected app or workflow token lacks Pages permission; in that case GitHub returns "Resource not accessible by integration" and the manual toggle above is the only supported path.
+
 The same `index.html` works from a local `file://` URL, a simple static server, or GitHub Pages. Clipboard and download permissions are most predictable over HTTPS or `localhost`.
 
 ## 25. License
