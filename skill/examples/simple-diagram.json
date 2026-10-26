@@ -1,0 +1,406 @@
+{
+  "protocol": "coordinate-image-v1",
+  "canvas": {
+    "width": 960,
+    "height": 600,
+    "background": "#F7F8FA"
+  },
+  "metadata": {
+    "title": "Coordinate Pipeline Diagram",
+    "description": "A clean three-stage technical diagram with cards, dashed connectors, arrowheads, labels, and local-processing notes.",
+    "tags": [
+      "diagram",
+      "workflow",
+      "documentation",
+      "clean"
+    ]
+  },
+  "gradients": {
+    "cardA": {
+      "type": "linear",
+      "x1": 80,
+      "y1": 212,
+      "x2": 300,
+      "y2": 426,
+      "stops": [
+        {
+          "offset": 0,
+          "color": "#EAF4FF"
+        },
+        {
+          "offset": 1,
+          "color": "#D9E9FA"
+        }
+      ]
+    },
+    "cardB": {
+      "type": "linear",
+      "x1": 370,
+      "y1": 212,
+      "x2": 590,
+      "y2": 426,
+      "stops": [
+        {
+          "offset": 0,
+          "color": "#F1EEFF"
+        },
+        {
+          "offset": 1,
+          "color": "#E5DEFA"
+        }
+      ]
+    },
+    "cardC": {
+      "type": "linear",
+      "x1": 660,
+      "y1": 212,
+      "x2": 880,
+      "y2": 426,
+      "stops": [
+        {
+          "offset": 0,
+          "color": "#EAF8F3"
+        },
+        {
+          "offset": 1,
+          "color": "#D7EFE5"
+        }
+      ]
+    }
+  },
+  "elements": [
+    {
+      "id": "text-1",
+      "type": "text",
+      "x": 60,
+      "y": 74,
+      "text": "How Coordinate Image Engine works",
+      "fontSize": 34,
+      "fontFamily": "sans-serif",
+      "fontWeight": "700",
+      "fill": "#17202A"
+    },
+    {
+      "id": "text-2",
+      "type": "text",
+      "x": 60,
+      "y": 108,
+      "text": "A local, three-step pipeline from text instructions to pixels",
+      "fontSize": 16,
+      "fontFamily": "sans-serif",
+      "fontWeight": "400",
+      "fill": "#59636E"
+    },
+    {
+      "id": "line-1",
+      "type": "line",
+      "x1": 60,
+      "y1": 136,
+      "x2": 900,
+      "y2": 136,
+      "stroke": "#D9DEE5",
+      "strokeWidth": 2
+    },
+    {
+      "id": "rounded_rectangle-1",
+      "type": "rounded-rectangle",
+      "x": 80,
+      "y": 212,
+      "width": 220,
+      "height": 214,
+      "radius": 18,
+      "fill": {
+        "gradient": "cardA"
+      },
+      "stroke": "#C6D0DB",
+      "strokeWidth": 1.5,
+      "shadow": {
+        "color": "#1D2A3A1A",
+        "blur": 18,
+        "offsetX": 0,
+        "offsetY": 8
+      }
+    },
+    {
+      "id": "circle-1",
+      "type": "circle",
+      "x": 124,
+      "y": 258,
+      "radius": 22,
+      "fill": "#FFFFFFCC",
+      "stroke": "#93A4B5",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "text-3",
+      "type": "text",
+      "x": 124,
+      "y": 264,
+      "text": "01",
+      "fontSize": 16,
+      "fontFamily": "monospace",
+      "fontWeight": "700",
+      "fill": "#25374A",
+      "align": "center",
+      "baseline": "middle"
+    },
+    {
+      "id": "text-4",
+      "type": "text",
+      "x": 104,
+      "y": 325,
+      "text": "Text model",
+      "fontSize": 22,
+      "fontFamily": "sans-serif",
+      "fontWeight": "700",
+      "fill": "#17202A"
+    },
+    {
+      "id": "text-5",
+      "type": "text",
+      "x": 104,
+      "y": 356,
+      "text": "Generates structured\nJSON drawing\ninstructions.",
+      "fontSize": 14,
+      "fontFamily": "sans-serif",
+      "fontWeight": "400",
+      "fill": "#4A5561",
+      "lineHeight": 1.35
+    },
+    {
+      "id": "rounded_rectangle-2",
+      "type": "rounded-rectangle",
+      "x": 370,
+      "y": 212,
+      "width": 220,
+      "height": 214,
+      "radius": 18,
+      "fill": {
+        "gradient": "cardB"
+      },
+      "stroke": "#C6D0DB",
+      "strokeWidth": 1.5,
+      "shadow": {
+        "color": "#1D2A3A1A",
+        "blur": 18,
+        "offsetX": 0,
+        "offsetY": 8
+      }
+    },
+    {
+      "id": "circle-2",
+      "type": "circle",
+      "x": 414,
+      "y": 258,
+      "radius": 22,
+      "fill": "#FFFFFFCC",
+      "stroke": "#93A4B5",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "text-6",
+      "type": "text",
+      "x": 414,
+      "y": 264,
+      "text": "02",
+      "fontSize": 16,
+      "fontFamily": "monospace",
+      "fontWeight": "700",
+      "fill": "#25374A",
+      "align": "center",
+      "baseline": "middle"
+    },
+    {
+      "id": "text-7",
+      "type": "text",
+      "x": 394,
+      "y": 325,
+      "text": "Validator",
+      "fontSize": 22,
+      "fontFamily": "sans-serif",
+      "fontWeight": "700",
+      "fill": "#17202A"
+    },
+    {
+      "id": "text-8",
+      "type": "text",
+      "x": 394,
+      "y": 356,
+      "text": "Checks schema, bounds,\nreferences, and\npath safety.",
+      "fontSize": 14,
+      "fontFamily": "sans-serif",
+      "fontWeight": "400",
+      "fill": "#4A5561",
+      "lineHeight": 1.35
+    },
+    {
+      "id": "rounded_rectangle-3",
+      "type": "rounded-rectangle",
+      "x": 660,
+      "y": 212,
+      "width": 220,
+      "height": 214,
+      "radius": 18,
+      "fill": {
+        "gradient": "cardC"
+      },
+      "stroke": "#C6D0DB",
+      "strokeWidth": 1.5,
+      "shadow": {
+        "color": "#1D2A3A1A",
+        "blur": 18,
+        "offsetX": 0,
+        "offsetY": 8
+      }
+    },
+    {
+      "id": "circle-3",
+      "type": "circle",
+      "x": 704,
+      "y": 258,
+      "radius": 22,
+      "fill": "#FFFFFFCC",
+      "stroke": "#93A4B5",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "text-9",
+      "type": "text",
+      "x": 704,
+      "y": 264,
+      "text": "03",
+      "fontSize": 16,
+      "fontFamily": "monospace",
+      "fontWeight": "700",
+      "fill": "#25374A",
+      "align": "center",
+      "baseline": "middle"
+    },
+    {
+      "id": "text-10",
+      "type": "text",
+      "x": 684,
+      "y": 325,
+      "text": "Renderer",
+      "fontSize": 22,
+      "fontFamily": "sans-serif",
+      "fontWeight": "700",
+      "fill": "#17202A"
+    },
+    {
+      "id": "text-11",
+      "type": "text",
+      "x": 684,
+      "y": 356,
+      "text": "Draws deterministic\nvector layers\non Canvas.",
+      "fontSize": 14,
+      "fontFamily": "sans-serif",
+      "fontWeight": "400",
+      "fill": "#4A5561",
+      "lineHeight": 1.35
+    },
+    {
+      "id": "line-2",
+      "type": "line",
+      "x1": 310,
+      "y1": 319,
+      "x2": 360,
+      "y2": 319,
+      "stroke": "#46586A",
+      "strokeWidth": 2.5,
+      "dash": [
+        7,
+        6
+      ],
+      "lineCap": "round"
+    },
+    {
+      "id": "polygon-1",
+      "type": "polygon",
+      "points": [
+        [
+          362,
+          312
+        ],
+        [
+          376,
+          319
+        ],
+        [
+          362,
+          326
+        ]
+      ],
+      "fill": "#46586A"
+    },
+    {
+      "id": "line-3",
+      "type": "line",
+      "x1": 600,
+      "y1": 319,
+      "x2": 650,
+      "y2": 319,
+      "stroke": "#46586A",
+      "strokeWidth": 2.5,
+      "dash": [
+        7,
+        6
+      ],
+      "lineCap": "round"
+    },
+    {
+      "id": "polygon-2",
+      "type": "polygon",
+      "points": [
+        [
+          652,
+          312
+        ],
+        [
+          666,
+          319
+        ],
+        [
+          652,
+          326
+        ]
+      ],
+      "fill": "#46586A"
+    },
+    {
+      "id": "rounded_rectangle-4",
+      "type": "rounded-rectangle",
+      "x": 208,
+      "y": 474,
+      "width": 544,
+      "height": 66,
+      "radius": 14,
+      "fill": "#EEF2F6",
+      "stroke": "#C6D0DB",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "text-12",
+      "type": "text",
+      "x": 480,
+      "y": 501,
+      "text": "No backend. No API key. JSON stays in your browser.",
+      "fontSize": 16,
+      "fontFamily": "sans-serif",
+      "fontWeight": "600",
+      "fill": "#344252",
+      "align": "center"
+    },
+    {
+      "id": "text-13",
+      "type": "text",
+      "x": 480,
+      "y": 523,
+      "text": "Output: PNG image + editable JSON",
+      "fontSize": 12,
+      "fontFamily": "monospace",
+      "fill": "#6A7683",
+      "align": "center"
+    }
+  ]
+}

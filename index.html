@@ -1,0 +1,3332 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="A local browser playground for coordinate-image-v1: structured text-model drawing instructions rendered as downloadable images.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>Coordinate Image Engine — coordinate-image-v1</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d10;
+      --bg-soft: #0f1216;
+      --surface: #12161b;
+      --surface-2: #171c22;
+      --surface-3: #1d232b;
+      --border: #2a313a;
+      --border-soft: #20262d;
+      --text: #f2f4f6;
+      --text-soft: #c4cbd3;
+      --muted: #929ca8;
+      --accent: #f3f5f7;
+      --accent-contrast: #11151a;
+      --focus: #7bc8ff;
+      --success: #7ddba5;
+      --danger: #ff9b8f;
+      --warning: #e7c47d;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .28);
+      --radius: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    html[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f4f5f6;
+      --bg-soft: #fafbfc;
+      --surface: #ffffff;
+      --surface-2: #f4f6f8;
+      --surface-3: #e9edf1;
+      --border: #d2d8df;
+      --border-soft: #e3e7ec;
+      --text: #161b21;
+      --text-soft: #3f4954;
+      --muted: #687380;
+      --accent: #1b2027;
+      --accent-contrast: #ffffff;
+      --focus: #1b6fb2;
+      --success: #177a4a;
+      --danger: #b2382e;
+      --warning: #8a6216;
+      --shadow: 0 16px 44px rgba(32, 42, 54, .11);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    [hidden] { display: none !important; }
+    a { color: inherit; text-decoration-color: var(--muted); text-underline-offset: .2em; }
+    a:hover { text-decoration-color: currentColor; }
+    button, input, select, textarea { font: inherit; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .sr-only {
+      position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    .skip-link {
+      position: absolute; left: 16px; top: -80px; z-index: 100; padding: 10px 14px;
+      color: var(--accent-contrast); background: var(--accent); border-radius: 8px;
+    }
+    .skip-link:focus { top: 12px; }
+    .site-header {
+      position: sticky; top: 0; z-index: 20; border-bottom: 1px solid var(--border-soft);
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    .header-inner, main, .site-footer-inner {
+      width: min(100% - 32px, 1480px); margin-inline: auto;
+    }
+    .header-inner {
+      min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 18px;
+    }
+    .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; min-width: 0; }
+    .brand-mark {
+      position: relative; flex: 0 0 36px; width: 36px; height: 36px; border: 1px solid var(--border);
+      border-radius: 10px; background: var(--surface-2);
+    }
+    .brand-mark::before, .brand-mark::after {
+      content: ""; position: absolute; background: var(--muted); opacity: .65;
+    }
+    .brand-mark::before { left: 7px; right: 7px; top: 18px; height: 1px; }
+    .brand-mark::after { top: 7px; bottom: 7px; left: 18px; width: 1px; }
+    .brand-dot {
+      position: absolute; z-index: 1; width: 7px; height: 7px; border-radius: 50%;
+      top: 8px; left: 20px; background: var(--text); box-shadow: 0 0 0 3px var(--surface-2);
+    }
+    .brand strong { display: block; font-size: 15px; letter-spacing: -.01em; white-space: nowrap; }
+    .brand small { display: block; color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .version-pill {
+      font-family: var(--mono); font-size: 11px; color: var(--text-soft); border: 1px solid var(--border);
+      border-radius: 999px; padding: 5px 9px; white-space: nowrap;
+    }
+    .header-link {
+      font-size: 13px; color: var(--text-soft); padding: 8px 10px; border-radius: 8px; text-decoration: none;
+    }
+    .header-link:hover { background: var(--surface-2); }
+    .button, .file-label {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 40px; padding: 8px 13px; border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); background: var(--surface-2); cursor: pointer; font-size: 13px;
+      font-weight: 600; line-height: 1.2; text-align: center; text-decoration: none;
+      transition: background-color .16s ease, border-color .16s ease, transform .16s ease;
+    }
+    .button:hover, .file-label:hover { background: var(--surface-3); border-color: var(--muted); }
+    .button:active, .file-label:active { transform: translateY(1px); }
+    .button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+    .button.primary:hover { filter: brightness(.93); }
+    .button.ghost { background: transparent; }
+    .button.danger { color: var(--danger); }
+    .button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    .button:disabled:hover { background: var(--surface-2); border-color: var(--border); }
+    .theme-toggle { min-width: 108px; }
+    main { padding: 32px 0 56px; }
+    .intro {
+      display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, .7fr); gap: 28px;
+      align-items: end; padding: 18px 0 32px; border-bottom: 1px solid var(--border-soft);
+    }
+    .eyebrow {
+      margin: 0 0 10px; color: var(--muted); font-family: var(--mono); font-size: 11px;
+      letter-spacing: .12em; text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: clamp(32px, 5vw, 58px); line-height: 1.04; letter-spacing: -.045em; }
+    .intro-copy { margin: 16px 0 0; max-width: 760px; color: var(--text-soft); font-size: 16px; }
+    .privacy-note {
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; background: var(--surface);
+      color: var(--text-soft); font-size: 13px;
+    }
+    .privacy-note strong { display: block; margin-bottom: 5px; color: var(--text); font-size: 14px; }
+    .prompt-card { margin: 18px 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+    .prompt-card summary {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 19px;
+      cursor: pointer; font-weight: 650; list-style-position: outside;
+    }
+    .prompt-card summary::marker { color: var(--muted); }
+    .summary-meta { color: var(--muted); font-size: 12px; font-weight: 400; text-align: right; }
+    .prompt-content { border-top: 1px solid var(--border-soft); padding: 18px 19px 20px; }
+    .prompt-content p { margin: 0 0 14px; color: var(--text-soft); font-size: 14px; }
+    .prompt-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .prompt-actions a { font-size: 13px; padding: 10px 4px; color: var(--text-soft); }
+    .prompt-content label { display: block; margin-bottom: 7px; font-size: 12px; color: var(--muted); font-weight: 600; }
+    #prompt-preview { width: 100%; min-height: 170px; resize: vertical; }
+    textarea, select {
+      border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); color: var(--text);
+    }
+    textarea { padding: 12px; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; tab-size: 2; }
+    select { min-height: 38px; padding: 7px 30px 7px 10px; font-size: 13px; }
+    .mobile-nav { display: none; }
+    .workspace {
+      display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(380px, .92fr);
+      grid-template-areas: "input preview" "examples preview"; gap: 16px; align-items: start; margin-top: 18px;
+    }
+    .panel { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+    .panel-input { grid-area: input; }
+    .panel-examples { grid-area: examples; }
+    .panel-preview { grid-area: preview; position: sticky; top: 86px; }
+    .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 18px 19px 14px; }
+    .panel-head h2 { margin: 0; font-size: 17px; letter-spacing: -.015em; }
+    .panel-head p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; }
+    .panel-kicker { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
+    .input-body { padding: 0 19px 19px; }
+    .drop-zone { border: 1px dashed var(--border); border-radius: 12px; padding: 10px; background: var(--bg-soft); transition: border-color .16s ease, background-color .16s ease; }
+    .drop-zone.drag-over { border-color: var(--focus); background: color-mix(in srgb, var(--focus) 8%, var(--bg-soft)); }
+    .editor-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 2px 9px; font-size: 12px; font-weight: 650; }
+    .badge { font-family: var(--mono); font-size: 9px; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 2px 6px; letter-spacing: .08em; }
+    #json-input { display: block; width: 100%; min-height: 360px; border-color: transparent; background: transparent; resize: vertical; }
+    #json-input:focus-visible { outline-offset: -3px; }
+    .input-help { margin: 7px 2px 0; color: var(--muted); font-size: 11.5px; }
+    .file-row { display: flex; align-items: center; gap: 10px; margin: 12px 0; min-width: 0; }
+    .file-input:focus-visible + .file-label { outline: 3px solid var(--focus); outline-offset: 3px; }
+    #file-name { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .action-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .action-grid .button, .action-grid .file-label { width: 100%; padding-inline: 8px; }
+    .action-grid .span-2 { grid-column: span 2; }
+    .status {
+      margin-top: 14px; padding: 11px 13px; border: 1px solid var(--border-soft); border-radius: 10px;
+      background: var(--surface-2); color: var(--text-soft); font-size: 12.5px; line-height: 1.45;
+    }
+    .status[data-state="valid"] { border-color: color-mix(in srgb, var(--success) 50%, var(--border)); color: var(--success); }
+    .status[data-state="error"] { border-color: color-mix(in srgb, var(--danger) 55%, var(--border)); color: var(--danger); }
+    .status[data-state="working"] { color: var(--warning); }
+    .stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .stat { border: 1px solid var(--border-soft); border-radius: 8px; padding: 6px 9px; color: var(--muted); font-family: var(--mono); font-size: 10.5px; }
+    .stat strong { color: var(--text); font-weight: 600; }
+    .error-details { margin-top: 10px; border: 1px solid color-mix(in srgb, var(--danger) 42%, var(--border)); border-radius: 10px; background: color-mix(in srgb, var(--danger) 6%, var(--surface)); }
+    .error-details summary { cursor: pointer; padding: 10px 12px; color: var(--danger); font-size: 12.5px; font-weight: 650; }
+    .error-details ol { margin: 0; padding: 0 12px 12px 34px; color: var(--text-soft); font-size: 12px; }
+    .error-details li + li { margin-top: 7px; }
+    .error-path { font-family: var(--mono); color: var(--danger); }
+    .example-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; padding: 0 19px 19px; }
+    .example-card {
+      display: block; width: 100%; padding: 0; overflow: hidden; text-align: left; color: var(--text);
+      border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); cursor: pointer;
+      transition: border-color .16s ease, transform .16s ease;
+    }
+    .example-card:hover { border-color: var(--muted); transform: translateY(-1px); }
+    .example-card[aria-pressed="true"] { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+    .example-thumb { height: 106px; overflow: hidden; background: var(--bg-soft); border-bottom: 1px solid var(--border-soft); }
+    .example-thumb canvas { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 34%; }
+    .example-info { padding: 10px 11px 12px; }
+    .example-info strong { display: block; font-size: 13px; line-height: 1.25; }
+    .example-info small { display: block; margin-top: 4px; color: var(--muted); font-size: 10.5px; line-height: 1.35; min-height: 28px; }
+    .preview-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 0 19px 14px; }
+    .export-controls { display: flex; align-items: center; gap: 8px; }
+    .export-controls label { color: var(--muted); font-size: 11.5px; }
+    .canvas-shell {
+      position: relative; display: flex; align-items: center; justify-content: center; min-height: 280px;
+      margin: 0 19px; padding: 14px; border: 1px solid var(--border-soft); border-radius: 12px;
+      background-color: var(--bg-soft);
+      background-image: linear-gradient(45deg, color-mix(in srgb, var(--border) 38%, transparent) 25%, transparent 25%),
+                        linear-gradient(-45deg, color-mix(in srgb, var(--border) 38%, transparent) 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, color-mix(in srgb, var(--border) 38%, transparent) 75%),
+                        linear-gradient(-45deg, transparent 75%, color-mix(in srgb, var(--border) 38%, transparent) 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    }
+    #preview-canvas { display: block; width: 100%; height: auto; max-height: min(68vh, 760px); object-fit: contain; border-radius: 5px; box-shadow: 0 8px 28px rgba(0,0,0,.28); }
+    .canvas-empty { position: absolute; inset: 14px; display: grid; place-items: center; color: var(--muted); font-size: 13px; pointer-events: none; }
+    .preview-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 19px 18px; color: var(--muted); font-size: 11.5px; }
+    .preview-footer code { font-family: var(--mono); font-size: 10.5px; }
+    .feature-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+    .feature { border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px; background: var(--surface); }
+    .feature b { display: block; margin-bottom: 5px; font-size: 13px; }
+    .feature span { color: var(--muted); font-size: 12px; }
+    .site-footer { border-top: 1px solid var(--border-soft); padding: 22px 0 34px; }
+    .site-footer-inner { display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font-size: 12px; }
+    .site-footer a { margin-left: 14px; }
+    .toast {
+      position: fixed; z-index: 50; right: 18px; bottom: 18px; max-width: min(400px, calc(100vw - 36px));
+      padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-3);
+      color: var(--text); box-shadow: var(--shadow); font-size: 12.5px; opacity: 0; transform: translateY(8px);
+      pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.visible { opacity: 1; transform: translateY(0); }
+    @media (max-width: 1100px) {
+      .workspace { grid-template-columns: minmax(0, 1fr) minmax(340px, .86fr); }
+      .action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .action-grid .span-2 { grid-column: span 2; }
+    }
+    @media (max-width: 900px) {
+      .mobile-nav {
+        position: sticky; top: 68px; z-index: 15; display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 4px; padding: 8px; margin-top: 18px; border: 1px solid var(--border); border-radius: 12px;
+        background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(12px);
+      }
+      .mobile-nav button {
+        border: 1px solid transparent; border-radius: 8px; min-height: 38px; background: transparent;
+        color: var(--muted); font-size: 12.5px; font-weight: 650; cursor: pointer;
+      }
+      .mobile-nav button[aria-pressed="true"] { border-color: var(--border); background: var(--surface-2); color: var(--text); }
+      .workspace { display: block; margin-top: 10px; }
+      .workspace > .panel { display: none; margin-bottom: 12px; box-shadow: none; }
+      .workspace[data-view="input"] > .panel[data-panel="input"],
+      .workspace[data-view="examples"] > .panel[data-panel="examples"],
+      .workspace[data-view="preview"] > .panel[data-panel="preview"] { display: block; }
+      .panel-preview { position: static; }
+      .intro { grid-template-columns: 1fr; align-items: start; }
+      .feature-strip { grid-template-columns: 1fr; }
+      #preview-canvas { max-height: 68vh; }
+    }
+    @media (max-width: 620px) {
+      .header-inner, main, .site-footer-inner { width: min(100% - 20px, 1480px); }
+      .header-inner { min-height: 60px; }
+      .brand small, .version-pill { display: none; }
+      .brand strong { font-size: 13px; }
+      .brand-mark { flex-basis: 32px; width: 32px; height: 32px; }
+      .brand-mark::before { left: 6px; right: 6px; top: 16px; }
+      .brand-mark::after { left: 16px; top: 6px; bottom: 6px; }
+      .theme-toggle { min-width: 0; padding-inline: 9px; font-size: 12px; }
+      .header-link { padding-inline: 5px; }
+      main { padding-top: 20px; }
+      .intro { padding-top: 4px; padding-bottom: 22px; }
+      .intro-copy { font-size: 14px; }
+      .prompt-card summary { align-items: flex-start; flex-direction: column; gap: 4px; }
+      .summary-meta { text-align: left; }
+      .mobile-nav { top: 61px; }
+      .panel-head { padding: 16px 14px 12px; }
+      .input-body { padding: 0 14px 14px; }
+      #json-input { min-height: 310px; font-size: 12px; }
+      .action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .action-grid .span-2 { grid-column: span 2; }
+      .example-grid { padding: 0 14px 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .example-thumb { height: 92px; }
+      .example-info { padding: 9px; }
+      .preview-toolbar { padding-inline: 14px; }
+      .canvas-shell { margin-inline: 14px; padding: 9px; min-height: 230px; }
+      .canvas-empty { inset: 9px; }
+      .preview-footer { padding-inline: 14px; flex-direction: column; align-items: flex-start; gap: 4px; }
+      .site-footer-inner { flex-direction: column; }
+      .site-footer a { margin-left: 0; margin-right: 12px; }
+    }
+    @media (max-width: 390px) {
+      .header-actions { gap: 3px; }
+      .header-link { display: none; }
+      .example-grid { grid-template-columns: 1fr; }
+      .example-thumb { height: 128px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to workspace</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./README.md" aria-label="Coordinate Image Engine documentation">
+        <span class="brand-mark" aria-hidden="true"><span class="brand-dot"></span></span>
+        <span><strong>Coordinate Image Engine</strong><small>Structured text to local vector art</small></span>
+      </a>
+      <div class="header-actions">
+        <span class="version-pill">coordinate-image-v1</span>
+        <a class="header-link" href="./docs/protocol-specification.md">Docs</a>
+        <button class="button ghost theme-toggle" id="theme-toggle" type="button" aria-pressed="false">Light theme</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <noscript>
+      <p class="status" data-state="error">JavaScript is required to validate JSON and draw images. No script is loaded from a remote server.</p>
+    </noscript>
+
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Open protocol · zero-cost renderer</p>
+        <h1 id="page-title">Text in. Drawing instructions out.</h1>
+        <p class="intro-copy">Paste a model-generated <code>coordinate-image-v1</code> document, validate its structure, and render it locally as a PNG. The model describes geometry; this browser draws the pixels.</p>
+      </div>
+      <div class="privacy-note">
+        <strong>Local by design</strong>
+        JSON, files, and rendered images stay in this browser. The playground makes no network requests and requires no account, API key, backend, or build step.
+      </div>
+    </section>
+
+    <section class="prompt-card" aria-label="Master prompt instructions">
+      <details id="prompt-details">
+        <summary>
+          <span>Model instructions · get JSON from any instruction-following text model</span>
+          <span class="summary-meta">Copy once, then keep the same chat open</span>
+        </summary>
+        <div class="prompt-content">
+          <p>Paste the complete master prompt into a new ChatGPT, Gemini, Grok, DeepSeek, OpenRouter, or local-model conversation. After activation, describe the artwork you want and paste the returned JSON into the editor below. A model produces instructions; this renderer produces the image.</p>
+          <div class="prompt-actions">
+            <button class="button primary" id="copy-prompt" type="button">Copy master prompt</button>
+            <button class="button" id="download-prompt" type="button">Download prompt</button>
+            <a href="./skill/MASTER_PROMPT.md">Open prompt file</a>
+            <a href="./skill/SKILL.md">Open reusable skill</a>
+          </div>
+          <label for="prompt-preview">Full prompt preview</label>
+          <textarea id="prompt-preview" readonly spellcheck="false" aria-describedby="prompt-help"></textarea>
+          <p id="prompt-help" class="input-help">The preview is editable visually but read-only; use the copy or download action to preserve the exact instructions.</p>
+        </div>
+      </details>
+    </section>
+
+    <nav class="mobile-nav" aria-label="Workspace view">
+      <button type="button" data-view-target="input" aria-pressed="true">Input</button>
+      <button type="button" data-view-target="examples" aria-pressed="false">Examples</button>
+      <button type="button" data-view-target="preview" aria-pressed="false">Preview</button>
+    </nav>
+
+    <section class="workspace" id="workspace" data-view="input" aria-label="Coordinate Image Engine workspace">
+      <section class="panel panel-input" data-panel="input" aria-labelledby="input-heading">
+        <div class="panel-head">
+          <div><span class="panel-kicker">Mode A + B</span><h2 id="input-heading">Protocol JSON</h2><p>Upload, drop, paste, or edit a document.</p></div>
+        </div>
+        <div class="input-body">
+          <div class="drop-zone" id="drop-zone">
+            <label class="editor-label" for="json-input"><span>JSON editor</span><span class="badge">PASTE AREA</span></label>
+            <textarea id="json-input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="input-help validation-status" placeholder="{ &quot;protocol&quot;: &quot;coordinate-image-v1&quot;, ... }"></textarea>
+            <p class="input-help" id="input-help">Drop a .json file here or paste a complete document. A single fenced json code block is accepted. Limit: 512 KiB.</p>
+          </div>
+          <div class="file-row">
+            <input class="sr-only file-input" id="file-input" type="file" accept=".json,application/json">
+            <label class="file-label" for="file-input">Choose JSON file</label>
+            <span id="file-name">No file selected</span>
+          </div>
+          <div class="action-grid" aria-label="JSON actions">
+            <button class="button primary span-2" id="validate-btn" type="button">Validate JSON</button>
+            <button class="button primary span-2" id="render-btn" type="button" disabled>Render Image</button>
+            <button class="button" id="format-btn" type="button">Pretty-print</button>
+            <button class="button" id="paste-btn" type="button">Paste JSON</button>
+            <button class="button" id="copy-json" type="button">Copy JSON</button>
+            <button class="button" id="download-json" type="button">Download JSON</button>
+            <button class="button danger" id="clear-btn" type="button">Clear editor</button>
+            <button class="button" id="reset-btn" type="button">Reset example</button>
+          </div>
+          <div class="status" id="validation-status" role="status" aria-live="polite" data-state="idle">Loading a valid example…</div>
+          <div class="stats" aria-label="Document statistics">
+            <span class="stat">Elements <strong id="stat-elements">—</strong></span>
+            <span class="stat">Canvas <strong id="stat-size">—</strong></span>
+            <span class="stat">Gradients <strong id="stat-gradients">—</strong></span>
+            <span class="stat">Layers <strong id="stat-order">array order</strong></span>
+          </div>
+          <details class="error-details" id="error-details" hidden>
+            <summary id="error-summary">Validation diagnostics</summary>
+            <ol id="error-list"></ol>
+          </details>
+        </div>
+      </section>
+
+      <section class="panel panel-examples" data-panel="examples" aria-labelledby="examples-heading">
+        <div class="panel-head">
+          <div><span class="panel-kicker">Reference artwork</span><h2 id="examples-heading">Example gallery</h2><p>Every thumbnail is rendered by this page’s engine.</p></div>
+        </div>
+        <div class="example-grid" id="example-grid"></div>
+      </section>
+
+      <section class="panel panel-preview" data-panel="preview" aria-labelledby="preview-heading">
+        <div class="panel-head">
+          <div><span class="panel-kicker">Deterministic Canvas output</span><h2 id="preview-heading">Image preview</h2><p>Logical dimensions are preserved; CSS only scales the display.</p></div>
+        </div>
+        <div class="preview-toolbar">
+          <div class="export-controls">
+            <label for="export-scale">PNG scale</label>
+            <select id="export-scale" aria-label="PNG export scale">
+              <option value="1">1× document</option>
+              <option value="2">2× document</option>
+            </select>
+          </div>
+          <button class="button primary" id="export-png" type="button" disabled>Export PNG</button>
+        </div>
+        <div class="canvas-shell" id="canvas-shell">
+          <canvas id="preview-canvas" width="960" height="640" role="img" aria-label="Rendered coordinate-image-v1 artwork">Your browser does not support HTML Canvas.</canvas>
+          <div class="canvas-empty" id="canvas-empty">Validate a document, then render to see the image.</div>
+        </div>
+        <div class="preview-footer">
+          <span id="render-info">No image rendered yet.</span>
+          <code id="render-filename">—</code>
+        </div>
+      </section>
+    </section>
+
+    <section class="feature-strip" aria-label="Design principles">
+      <div class="feature"><b>Strict by default</b><span>Unknown properties, unsafe paths, dangling gradient references, and oversized documents are rejected before drawing.</span></div>
+      <div class="feature"><b>Composable artwork</b><span>Layers, groups, transforms, gradients, shadows, curves, and typography make detailed vector-like scenes possible.</span></div>
+      <div class="feature"><b>Portable output</b><span>Keep the editable JSON and export a true-resolution PNG. No provider lock-in or server-side rendering.</span></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>Coordinate Image Engine is procedural graphics, not native neural image generation.</span>
+      <span><a href="./docs/security.md">Security</a><a href="./docs/troubleshooting.md">Troubleshooting</a><a href="./CONTRIBUTING.md">Contribute</a></span>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- BEGIN AUTO-GENERATED: protocol-schema -->
+  <script type="application/json" id="protocol-schema">
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coordinate-image-engine.invalid/schemas/coordinate-image-v1.schema.json",
+  "title": "Coordinate Image v1 document",
+  "description": "Strict schema for deterministic, local, browser-rendered vector drawing instructions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "canvas",
+    "elements"
+  ],
+  "properties": {
+    "protocol": {
+      "const": "coordinate-image-v1"
+    },
+    "canvas": {
+      "$ref": "#/$defs/canvas"
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "gradients": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64,
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+      },
+      "minProperties": 0,
+      "maxProperties": 64,
+      "additionalProperties": {
+        "$ref": "#/$defs/gradient"
+      }
+    },
+    "elements": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/element"
+      },
+      "maxItems": 1000
+    }
+  },
+  "$defs": {
+    "coordinate": {
+      "type": "number",
+      "minimum": -100000,
+      "maximum": 100000,
+      "description": "Finite canvas-space number. Values outside the canvas are allowed but clipped."
+    },
+    "positiveLength": {
+      "type": "number",
+      "maximum": 100000,
+      "exclusiveMinimum": 0
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "color": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 9,
+      "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+    },
+    "paint": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/color"
+        },
+        {
+          "$ref": "#/$defs/gradientReference"
+        }
+      ],
+      "description": "Colors use #RGB, #RRGGBB, or #RRGGBBAA. Gradient references must name a top-level gradient."
+    },
+    "gradientReference": {
+      "type": "object",
+      "properties": {
+        "gradient": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        }
+      },
+      "required": [
+        "gradient"
+      ],
+      "additionalProperties": false
+    },
+    "opacity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "strokeWidth": {
+      "type": "number",
+      "maximum": 128,
+      "exclusiveMinimum": 0
+    },
+    "shadow": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 9,
+          "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+        },
+        "blur": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 128
+        },
+        "offsetX": {
+          "type": "number",
+          "minimum": -256,
+          "maximum": 256
+        },
+        "offsetY": {
+          "type": "number",
+          "minimum": -256,
+          "maximum": 256
+        }
+      },
+      "required": [
+        "color",
+        "blur"
+      ],
+      "additionalProperties": false
+    },
+    "transform": {
+      "type": "object",
+      "properties": {
+        "translate": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": -100000,
+            "maximum": 100000
+          },
+          "maxItems": 2
+        },
+        "origin": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": -100000,
+            "maximum": 100000
+          },
+          "maxItems": 2
+        },
+        "rotate": {
+          "type": "number",
+          "minimum": -3600,
+          "maximum": 3600
+        },
+        "scale": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "number",
+            "maximum": 100,
+            "exclusiveMinimum": 0
+          },
+          "maxItems": 2
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "Coordinates are scaled about origin, rotated clockwise, moved back, then translated."
+    },
+    "gradientStop": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "color": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 9,
+          "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+        }
+      },
+      "required": [
+        "offset",
+        "color"
+      ],
+      "additionalProperties": false
+    },
+    "stops": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "$ref": "#/$defs/gradientStop"
+      },
+      "maxItems": 16
+    },
+    "linearGradient": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "linear"
+        },
+        "x1": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y1": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "x2": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y2": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "stops": {
+          "$ref": "#/$defs/stops"
+        }
+      },
+      "required": [
+        "type",
+        "x1",
+        "y1",
+        "x2",
+        "y2",
+        "stops"
+      ],
+      "additionalProperties": false
+    },
+    "radialGradient": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "radial"
+        },
+        "cx": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "cy": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "r": {
+          "type": "number",
+          "maximum": 100000,
+          "exclusiveMinimum": 0
+        },
+        "stops": {
+          "$ref": "#/$defs/stops"
+        }
+      },
+      "required": [
+        "type",
+        "cx",
+        "cy",
+        "r",
+        "stops"
+      ],
+      "additionalProperties": false
+    },
+    "gradient": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/linearGradient"
+        },
+        {
+          "$ref": "#/$defs/radialGradient"
+        }
+      ]
+    },
+    "canvas": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 4096
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 4096
+        },
+        "background": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "background"
+      ],
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "tags": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "maxItems": 16
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "element": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/rectangleElement"
+        },
+        {
+          "$ref": "#/$defs/roundedRectangleElement"
+        },
+        {
+          "$ref": "#/$defs/circleElement"
+        },
+        {
+          "$ref": "#/$defs/ellipseElement"
+        },
+        {
+          "$ref": "#/$defs/lineElement"
+        },
+        {
+          "$ref": "#/$defs/polylineElement"
+        },
+        {
+          "$ref": "#/$defs/polygonElement"
+        },
+        {
+          "$ref": "#/$defs/pathElement"
+        },
+        {
+          "$ref": "#/$defs/textElement"
+        },
+        {
+          "$ref": "#/$defs/groupElement"
+        }
+      ]
+    },
+    "rectangleElement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "type": {
+          "const": "rectangle"
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "When false, the element and, for groups, its children are skipped."
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "x": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "width": {
+          "type": "number",
+          "maximum": 100000,
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "maximum": 100000,
+          "exclusiveMinimum": 0
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        },
+        "strokeWidth": {
+          "type": "number",
+          "maximum": 128,
+          "exclusiveMinimum": 0
+        },
+        "lineCap": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        },
+        "lineJoin": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        },
+        "dash": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "maximum": 1024,
+            "exclusiveMinimum": 0
+          },
+          "maxItems": 16
+        },
+        "shadow": {
+          "$ref": "#/$defs/shadow"
+        },
+        "fill": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "roundedRectangleElement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "type": {
+          "const": "rounded-rectangle"
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "When false, the element and, for groups, its children are skipped."
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "x": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "width": {
+          "type": "number",
+          "maximum": 100000,
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "maximum": 100000,
+          "exclusiveMinimum": 0
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        },
+        "strokeWidth": {
+          "type": "number",
+          "maximum": 128,
+          "exclusiveMinimum": 0
+        },
+        "lineCap": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        },
+        "lineJoin": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        },
+        "dash": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "maximum": 1024,
+            "exclusiveMinimum": 0
+          },
+          "maxItems": 16
+        },
+        "shadow": {
+          "$ref": "#/$defs/shadow"
+        },
+        "fill": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "x",
+        "y",
+        "width",
+        "height",
+        "radius"
+      ],
+      "additionalProperties": false
+    },
+    "circleElement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "type": {
+          "const": "circle"
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "When false, the element and, for groups, its children are skipped."
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "x": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "radius": {
+          "type": "number",
+          "maximum": 100000,
+          "exclusiveMinimum": 0
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        },
+        "strokeWidth": {
+          "type": "number",
+          "maximum": 128,
+          "exclusiveMinimum": 0
+        },
+        "lineCap": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        },
+        "lineJoin": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        },
+        "dash": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "maximum": 1024,
+            "exclusiveMinimum": 0
+          },
+          "maxItems": 16
+        },
+        "shadow": {
+          "$ref": "#/$defs/shadow"
+        },
+        "fill": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "x",
+        "y",
+        "radius"
+      ],
+      "additionalProperties": false
+    },
+    "ellipseElement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "type": {
+          "const": "ellipse"
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "When false, the element and, for groups, its children are skipped."
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "x": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "radiusX": {
+          "type": "number",
+          "maximum": 100000,
+          "exclusiveMinimum": 0
+        },
+        "radiusY": {
+          "type": "number",
+          "maximum": 100000,
+          "exclusiveMinimum": 0
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        },
+        "strokeWidth": {
+          "type": "number",
+          "maximum": 128,
+          "exclusiveMinimum": 0
+        },
+        "lineCap": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        },
+        "lineJoin": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        },
+        "dash": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "maximum": 1024,
+            "exclusiveMinimum": 0
+          },
+          "maxItems": 16
+        },
+        "shadow": {
+          "$ref": "#/$defs/shadow"
+        },
+        "fill": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "x",
+        "y",
+        "radiusX",
+        "radiusY"
+      ],
+      "additionalProperties": false
+    },
+    "lineElement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "type": {
+          "const": "line"
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "When false, the element and, for groups, its children are skipped."
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "x1": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y1": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "x2": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y2": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        },
+        "strokeWidth": {
+          "type": "number",
+          "maximum": 128,
+          "exclusiveMinimum": 0
+        },
+        "lineCap": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        },
+        "lineJoin": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        },
+        "dash": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "maximum": 1024,
+            "exclusiveMinimum": 0
+          },
+          "maxItems": 16
+        },
+        "shadow": {
+          "$ref": "#/$defs/shadow"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "x1",
+        "y1",
+        "x2",
+        "y2",
+        "stroke"
+      ],
+      "additionalProperties": false
+    },
+    "polylineElement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "type": {
+          "const": "polyline"
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "When false, the element and, for groups, its children are skipped."
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "number",
+              "minimum": -100000,
+              "maximum": 100000
+            },
+            "maxItems": 2
+          },
+          "maxItems": 256
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        },
+        "strokeWidth": {
+          "type": "number",
+          "maximum": 128,
+          "exclusiveMinimum": 0
+        },
+        "lineCap": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        },
+        "lineJoin": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        },
+        "dash": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "maximum": 1024,
+            "exclusiveMinimum": 0
+          },
+          "maxItems": 16
+        },
+        "shadow": {
+          "$ref": "#/$defs/shadow"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "points",
+        "stroke"
+      ],
+      "additionalProperties": false
+    },
+    "polygonElement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "type": {
+          "const": "polygon"
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "When false, the element and, for groups, its children are skipped."
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "points": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "number",
+              "minimum": -100000,
+              "maximum": 100000
+            },
+            "maxItems": 2
+          },
+          "maxItems": 256
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        },
+        "strokeWidth": {
+          "type": "number",
+          "maximum": 128,
+          "exclusiveMinimum": 0
+        },
+        "lineCap": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        },
+        "lineJoin": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        },
+        "dash": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "maximum": 1024,
+            "exclusiveMinimum": 0
+          },
+          "maxItems": 16
+        },
+        "shadow": {
+          "$ref": "#/$defs/shadow"
+        },
+        "fill": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "points"
+      ],
+      "additionalProperties": false
+    },
+    "pathElement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "type": {
+          "const": "path"
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "When false, the element and, for groups, its children are skipped."
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "d": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 8192,
+          "pattern": "^[MmLlHhVvCcQqZz0-9eE+\\-., \\t\\r\\n]+$"
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        },
+        "strokeWidth": {
+          "type": "number",
+          "maximum": 128,
+          "exclusiveMinimum": 0
+        },
+        "lineCap": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        },
+        "lineJoin": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        },
+        "dash": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "maximum": 1024,
+            "exclusiveMinimum": 0
+          },
+          "maxItems": 16
+        },
+        "shadow": {
+          "$ref": "#/$defs/shadow"
+        },
+        "fill": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "d"
+      ],
+      "additionalProperties": false
+    },
+    "textElement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "type": {
+          "const": "text"
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "When false, the element and, for groups, its children are skipped."
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "x": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "fontSize": {
+          "type": "number",
+          "maximum": 256,
+          "exclusiveMinimum": 0
+        },
+        "fontFamily": {
+          "enum": [
+            "sans-serif",
+            "serif",
+            "monospace",
+            "system-ui"
+          ]
+        },
+        "fontWeight": {
+          "enum": [
+            "normal",
+            "bold",
+            "100",
+            "200",
+            "300",
+            "400",
+            "500",
+            "600",
+            "700",
+            "800",
+            "900"
+          ]
+        },
+        "fontStyle": {
+          "enum": [
+            "normal",
+            "italic"
+          ]
+        },
+        "align": {
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "baseline": {
+          "enum": [
+            "alphabetic",
+            "top",
+            "middle",
+            "bottom"
+          ]
+        },
+        "lineHeight": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 3
+        },
+        "maxWidth": {
+          "type": "number",
+          "maximum": 4096,
+          "exclusiveMinimum": 0
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        },
+        "strokeWidth": {
+          "type": "number",
+          "maximum": 128,
+          "exclusiveMinimum": 0
+        },
+        "lineCap": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        },
+        "lineJoin": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        },
+        "dash": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "maximum": 1024,
+            "exclusiveMinimum": 0
+          },
+          "maxItems": 16
+        },
+        "shadow": {
+          "$ref": "#/$defs/shadow"
+        },
+        "fill": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "$ref": "#/$defs/gradientReference"
+            }
+          ],
+          "description": "A hex color or a reference to a named gradient."
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "x",
+        "y",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "groupElement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "type": {
+          "const": "group"
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "When false, the element and, for groups, its children are skipped."
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "children": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/element"
+          },
+          "maxItems": 1000
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "children"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
+  </script>
+<!-- END AUTO-GENERATED: protocol-schema -->
+
+  <!-- BEGIN AUTO-GENERATED: example-bundle -->
+  <script type="application/json" id="example-bundle">
+{"simple-landscape":{"protocol":"coordinate-image-v1","canvas":{"width":960,"height":640,"background":{"gradient":"sky"}},"metadata":{"title":"Sunset Valley","description":"A layered sunset landscape with reflected light, mountain silhouettes, pines, and ripples.","tags":["landscape","sunset","gradients","nature"]},"gradients":{"sky":{"type":"linear","x1":0,"y1":0,"x2":0,"y2":640,"stops":[{"offset":0,"color":"#162943"},{"offset":0.48,"color":"#8C5878"},{"offset":0.76,"color":"#E88B62"},{"offset":1,"color":"#F8C27A"}]},"sunGlow":{"type":"radial","cx":720,"cy":164,"r":176,"stops":[{"offset":0,"color":"#FFE7AA"},{"offset":0.4,"color":"#F9B45C88"},{"offset":1,"color":"#F9B45C00"}]},"water":{"type":"linear","x1":0,"y1":442,"x2":0,"y2":640,"stops":[{"offset":0,"color":"#345B73"},{"offset":0.48,"color":"#1B3A52"},{"offset":1,"color":"#0A1B2A"}]},"foreground":{"type":"linear","x1":0,"y1":470,"x2":0,"y2":640,"stops":[{"offset":0,"color":"#20333C"},{"offset":1,"color":"#07121B"}]}},"elements":[{"id":"group-1","type":"group","children":[{"id":"circle-1","type":"circle","x":76,"y":74,"radius":2,"fill":"#FFF2C8","opacity":0.75},{"id":"circle-2","type":"circle","x":138,"y":116,"radius":1.6,"fill":"#FFF2C8","opacity":0.75},{"id":"circle-3","type":"circle","x":191,"y":60,"radius":2.2,"fill":"#FFF2C8","opacity":0.75},{"id":"circle-4","type":"circle","x":278,"y":100,"radius":1.4,"fill":"#FFF2C8","opacity":0.75},{"id":"circle-5","type":"circle","x":357,"y":52,"radius":1.8,"fill":"#FFF2C8","opacity":0.75},{"id":"circle-6","type":"circle","x":446,"y":91,"radius":2,"fill":"#FFF2C8","opacity":0.75},{"id":"circle-7","type":"circle","x":548,"y":48,"radius":1.5,"fill":"#FFF2C8","opacity":0.75},{"id":"circle-8","type":"circle","x":836,"y":87,"radius":1.8,"fill":"#FFF2C8","opacity":0.75},{"id":"circle-9","type":"circle","x":903,"y":52,"radius":1.2,"fill":"#FFF2C8","opacity":0.75}]},{"id":"circle-10","type":"circle","x":720,"y":164,"radius":176,"fill":{"gradient":"sunGlow"},"opacity":0.9},{"id":"circle-11","type":"circle","x":720,"y":164,"radius":68,"fill":"#FFE2A3","shadow":{"color":"#FFB35C","blur":48,"offsetX":0,"offsetY":0},"opacity":0.98},{"id":"polygon-1","type":"polygon","points":[[0,346],[126,230],[225,304],[335,184],[472,342],[572,254],[706,356],[837,236],[960,334],[960,430],[0,430]],"fill":"#3A3150","opacity":0.72},{"id":"polygon-2","type":"polygon","points":[[0,382],[118,298],[234,370],[358,272],[488,394],[610,300],[739,402],[862,306],[960,382],[960,458],[0,458]],"fill":"#282A44","opacity":0.92},{"id":"path-1","type":"path","d":"M 0 420 C 140 390 250 432 386 412 C 530 390 650 437 960 405 L 960 465 L 0 465 Z","fill":"#18243A","opacity":0.72},{"id":"rectangle-1","type":"rectangle","x":0,"y":442,"width":960,"height":198,"fill":{"gradient":"water"}},{"id":"ellipse-1","type":"ellipse","x":720,"y":470,"radiusX":92,"radiusY":12,"fill":"#FFD18A","opacity":0.24},{"id":"ellipse-2","type":"ellipse","x":720,"y":505,"radiusX":154,"radiusY":10,"fill":"#F6A85F","opacity":0.18},{"id":"ellipse-3","type":"ellipse","x":720,"y":548,"radiusX":205,"radiusY":9,"fill":"#F6A85F","opacity":0.11},{"id":"line-1","type":"line","x1":92,"y1":474,"x2":270,"y2":474,"stroke":"#B7DCE1","strokeWidth":2,"opacity":0.28,"lineCap":"round"},{"id":"line-2","type":"line","x1":156,"y1":496,"x2":266,"y2":496,"stroke":"#B7DCE1","strokeWidth":2,"opacity":0.22,"lineCap":"round"},{"id":"line-3","type":"line","x1":62,"y1":522,"x2":204,"y2":522,"stroke":"#B7DCE1","strokeWidth":2,"opacity":0.18,"lineCap":"round"},{"id":"line-4","type":"line","x1":384,"y1":548,"x2":482,"y2":548,"stroke":"#B7DCE1","strokeWidth":2,"opacity":0.16,"lineCap":"round"},{"id":"line-5","type":"line","x1":720,"y1":576,"x2":900,"y2":576,"stroke":"#B7DCE1","strokeWidth":2,"opacity":0.13,"lineCap":"round"},{"id":"line-6","type":"line","x1":520,"y1":603,"x2":640,"y2":603,"stroke":"#B7DCE1","strokeWidth":2,"opacity":0.11,"lineCap":"round"},{"id":"path-2","type":"path","d":"M 0 520 C 110 480 192 544 292 504 C 390 466 450 518 540 498 C 670 468 772 534 960 480 L 960 640 L 0 640 Z","fill":{"gradient":"foreground"}},{"id":"path-3","type":"path","d":"M 960 512 C 830 486 748 540 652 510 C 578 487 526 510 462 538 C 590 540 690 584 960 640 L 960 512 Z","fill":"#0B1722","opacity":0.88},{"id":"group-8","type":"group","children":[{"id":"group-2","type":"group","transform":{"translate":[60,490],"scale":[1.0,1.0]},"children":[{"id":"rectangle-2","type":"rectangle","x":-5,"y":18,"width":10,"height":58,"fill":"#101A20"},{"id":"polygon-3","type":"polygon","points":[[0,-74],[-36,8],[-18,4],[-46,48],[46,48],[18,4],[36,8]],"fill":"#10202A"}]},{"id":"group-3","type":"group","transform":{"translate":[112,476],"scale":[0.78,0.78]},"children":[{"id":"rectangle-3","type":"rectangle","x":-5,"y":18,"width":10,"height":58,"fill":"#101A20"},{"id":"polygon-4","type":"polygon","points":[[0,-74],[-36,8],[-18,4],[-46,48],[46,48],[18,4],[36,8]],"fill":"#10202A"}]},{"id":"group-4","type":"group","transform":{"translate":[158,502],"scale":[0.9,0.9]},"children":[{"id":"rectangle-4","type":"rectangle","x":-5,"y":18,"width":10,"height":58,"fill":"#101A20"},{"id":"polygon-5","type":"polygon","points":[[0,-74],[-36,8],[-18,4],[-46,48],[46,48],[18,4],[36,8]],"fill":"#10202A"}]},{"id":"group-5","type":"group","transform":{"translate":[850,483],"scale":[0.82,0.82]},"children":[{"id":"rectangle-5","type":"rectangle","x":-5,"y":18,"width":10,"height":58,"fill":"#101A20"},{"id":"polygon-6","type":"polygon","points":[[0,-74],[-36,8],[-18,4],[-46,48],[46,48],[18,4],[36,8]],"fill":"#10202A"}]},{"id":"group-6","type":"group","transform":{"translate":[900,500],"scale":[1.06,1.06]},"children":[{"id":"rectangle-6","type":"rectangle","x":-5,"y":18,"width":10,"height":58,"fill":"#101A20"},{"id":"polygon-7","type":"polygon","points":[[0,-74],[-36,8],[-18,4],[-46,48],[46,48],[18,4],[36,8]],"fill":"#10202A"}]},{"id":"group-7","type":"group","transform":{"translate":[938,478],"scale":[0.72,0.72]},"children":[{"id":"rectangle-7","type":"rectangle","x":-5,"y":18,"width":10,"height":58,"fill":"#101A20"},{"id":"polygon-8","type":"polygon","points":[[0,-74],[-36,8],[-18,4],[-46,48],[46,48],[18,4],[36,8]],"fill":"#10202A"}]}]},{"id":"rounded_rectangle-1","type":"rounded-rectangle","x":28,"y":572,"width":178,"height":40,"radius":20,"fill":"#0B1722","stroke":"#89A7A9","strokeWidth":1,"opacity":0.72},{"id":"text-1","type":"text","x":42,"y":598,"text":"EVENING VALLEY","fontSize":15,"fontFamily":"sans-serif","fontWeight":"600","fill":"#D4E3DC","align":"left","baseline":"alphabetic"}]},"futuristic-robot":{"protocol":"coordinate-image-v1","canvas":{"width":768,"height":768,"background":{"gradient":"background"}},"metadata":{"title":"Futuristic Robot","description":"A premium cyan-lit humanoid robot assembled from layered metal plates, glows, joints, and grid details.","tags":["robot","science-fiction","portrait","gradients"]},"gradients":{"background":{"type":"linear","x1":0,"y1":0,"x2":768,"y2":768,"stops":[{"offset":0,"color":"#07101D"},{"offset":0.55,"color":"#101C2C"},{"offset":1,"color":"#040912"}]},"halo":{"type":"radial","cx":384,"cy":324,"r":286,"stops":[{"offset":0,"color":"#1D6C8C88"},{"offset":0.55,"color":"#194A6833"},{"offset":1,"color":"#194A6800"}]},"metal":{"type":"linear","x1":0,"y1":0,"x2":1,"y2":1,"stops":[{"offset":0,"color":"#E4EAEF"},{"offset":0.25,"color":"#AAB9C5"},{"offset":0.58,"color":"#738797"},{"offset":1,"color":"#C4CED6"}]},"visor":{"type":"linear","x1":298,"y1":166,"x2":470,"y2":236,"stops":[{"offset":0,"color":"#051626"},{"offset":0.5,"color":"#0F3648"},{"offset":1,"color":"#061825"}]},"coreGlow":{"type":"radial","cx":384,"cy":430,"r":34,"stops":[{"offset":0,"color":"#F0FFFF"},{"offset":0.35,"color":"#75E8FF"},{"offset":1,"color":"#1683AA"}]}},"elements":[{"id":"group-1","type":"group","children":[{"id":"line-1","type":"line","x1":0,"y1":0,"x2":0,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-2","type":"line","x1":0,"y1":0,"x2":768,"y2":0,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-3","type":"line","x1":64,"y1":0,"x2":64,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-4","type":"line","x1":0,"y1":64,"x2":768,"y2":64,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-5","type":"line","x1":128,"y1":0,"x2":128,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-6","type":"line","x1":0,"y1":128,"x2":768,"y2":128,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-7","type":"line","x1":192,"y1":0,"x2":192,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-8","type":"line","x1":0,"y1":192,"x2":768,"y2":192,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-9","type":"line","x1":256,"y1":0,"x2":256,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-10","type":"line","x1":0,"y1":256,"x2":768,"y2":256,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-11","type":"line","x1":320,"y1":0,"x2":320,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-12","type":"line","x1":0,"y1":320,"x2":768,"y2":320,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-13","type":"line","x1":384,"y1":0,"x2":384,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-14","type":"line","x1":0,"y1":384,"x2":768,"y2":384,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-15","type":"line","x1":448,"y1":0,"x2":448,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-16","type":"line","x1":0,"y1":448,"x2":768,"y2":448,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-17","type":"line","x1":512,"y1":0,"x2":512,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-18","type":"line","x1":0,"y1":512,"x2":768,"y2":512,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-19","type":"line","x1":576,"y1":0,"x2":576,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-20","type":"line","x1":0,"y1":576,"x2":768,"y2":576,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-21","type":"line","x1":640,"y1":0,"x2":640,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-22","type":"line","x1":0,"y1":640,"x2":768,"y2":640,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-23","type":"line","x1":704,"y1":0,"x2":704,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-24","type":"line","x1":0,"y1":704,"x2":768,"y2":704,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-25","type":"line","x1":768,"y1":0,"x2":768,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08},{"id":"line-26","type":"line","x1":0,"y1":768,"x2":768,"y2":768,"stroke":"#68D8FF","strokeWidth":1,"opacity":0.08}]},{"id":"ellipse-1","type":"ellipse","x":384,"y":704,"radiusX":250,"radiusY":34,"fill":"#030A13","opacity":0.75},{"id":"circle-1","type":"circle","x":384,"y":324,"radius":286,"fill":{"gradient":"halo"},"opacity":0.9},{"id":"polygon-1","type":"polygon","points":[[232,286],[110,228],[136,426],[210,398]],"fill":"#1C3448","stroke":"#4A6E86","strokeWidth":2,"opacity":0.72},{"id":"polygon-2","type":"polygon","points":[[536,286],[658,228],[632,426],[558,398]],"fill":"#1C3448","stroke":"#4A6E86","strokeWidth":2,"opacity":0.72},{"id":"rounded_rectangle-1","type":"rounded-rectangle","x":318,"y":552,"width":54,"height":132,"radius":20,"fill":{"gradient":"metal"},"stroke":"#536B7C","strokeWidth":2,"shadow":{"color":"#00000099","blur":18,"offsetX":0,"offsetY":10}},{"id":"rounded_rectangle-2","type":"rounded-rectangle","x":396,"y":552,"width":54,"height":132,"radius":20,"fill":{"gradient":"metal"},"stroke":"#536B7C","strokeWidth":2,"shadow":{"color":"#00000099","blur":18,"offsetX":0,"offsetY":10}},{"id":"rounded_rectangle-3","type":"rounded-rectangle","x":302,"y":658,"width":82,"height":38,"radius":14,"fill":"#273A4B","stroke":"#68D8FF","strokeWidth":1.5},{"id":"rounded_rectangle-4","type":"rounded-rectangle","x":384,"y":658,"width":82,"height":38,"radius":14,"fill":"#273A4B","stroke":"#68D8FF","strokeWidth":1.5},{"id":"group-2","type":"group","transform":{"translate":[188,338],"origin":[0,0],"rotate":16},"children":[{"id":"rounded_rectangle-5","type":"rounded-rectangle","x":-26,"y":-10,"width":52,"height":176,"radius":22,"fill":{"gradient":"metal"},"stroke":"#536B7C","strokeWidth":2},{"id":"circle-2","type":"circle","x":0,"y":4,"radius":30,"fill":"#2F4559","stroke":"#68D8FF","strokeWidth":2},{"id":"circle-3","type":"circle","x":0,"y":174,"radius":27,"fill":"#25384A","stroke":"#68D8FF","strokeWidth":2},{"id":"rounded_rectangle-6","type":"rounded-rectangle","x":-24,"y":198,"width":48,"height":58,"radius":18,"fill":"#9FAEBB","stroke":"#536B7C","strokeWidth":2}]},{"id":"group-3","type":"group","transform":{"translate":[580,338],"origin":[0,0],"rotate":-16},"children":[{"id":"rounded_rectangle-7","type":"rounded-rectangle","x":-26,"y":-10,"width":52,"height":176,"radius":22,"fill":{"gradient":"metal"},"stroke":"#536B7C","strokeWidth":2},{"id":"circle-4","type":"circle","x":0,"y":4,"radius":30,"fill":"#2F4559","stroke":"#68D8FF","strokeWidth":2},{"id":"circle-5","type":"circle","x":0,"y":174,"radius":27,"fill":"#25384A","stroke":"#68D8FF","strokeWidth":2},{"id":"rounded_rectangle-8","type":"rounded-rectangle","x":-24,"y":198,"width":48,"height":58,"radius":18,"fill":"#9FAEBB","stroke":"#536B7C","strokeWidth":2}]},{"id":"rounded_rectangle-9","type":"rounded-rectangle","x":270,"y":280,"width":228,"height":300,"radius":42,"fill":{"gradient":"metal"},"stroke":"#6F8597","strokeWidth":3,"shadow":{"color":"#000000AA","blur":30,"offsetX":0,"offsetY":16}},{"id":"polygon-3","type":"polygon","points":[[300,302],[468,302],[440,352],[328,352]],"fill":"#D6DEE4","opacity":0.64},{"id":"polygon-4","type":"polygon","points":[[328,522],[440,522],[468,560],[300,560]],"fill":"#4E6171","opacity":0.78},{"id":"polygon-5","type":"polygon","points":[[384,372],[438,410],[420,480],[348,480],[330,410]],"fill":"#263D52","stroke":"#73E5FF","strokeWidth":2},{"id":"circle-6","type":"circle","x":384,"y":430,"radius":34,"fill":{"gradient":"coreGlow"},"stroke":"#B8F4FF","strokeWidth":2,"shadow":{"color":"#55DFFF","blur":24}},{"id":"circle-7","type":"circle","x":384,"y":430,"radius":12,"fill":"#E8FDFF"},{"id":"rounded_rectangle-10","type":"rounded-rectangle","x":297,"y":334,"width":18,"height":156,"radius":9,"fill":"#4B6377","opacity":0.7},{"id":"rounded_rectangle-11","type":"rounded-rectangle","x":453,"y":334,"width":18,"height":156,"radius":9,"fill":"#4B6377","opacity":0.7},{"id":"rounded_rectangle-12","type":"rounded-rectangle","x":348,"y":252,"width":72,"height":48,"radius":14,"fill":"#465B6D","stroke":"#7B96A9","strokeWidth":2},{"id":"rounded_rectangle-13","type":"rounded-rectangle","x":270,"y":132,"width":228,"height":144,"radius":42,"fill":{"gradient":"metal"},"stroke":"#90A3B2","strokeWidth":3,"shadow":{"color":"#00000099","blur":22,"offsetX":0,"offsetY":8}},{"id":"rounded_rectangle-14","type":"rounded-rectangle","x":248,"y":190,"width":30,"height":54,"radius":10,"fill":"#2E455A","stroke":"#6B8FA5","strokeWidth":2},{"id":"rounded_rectangle-15","type":"rounded-rectangle","x":490,"y":190,"width":30,"height":54,"radius":10,"fill":"#2E455A","stroke":"#6B8FA5","strokeWidth":2},{"id":"rounded_rectangle-16","type":"rounded-rectangle","x":298,"y":166,"width":172,"height":70,"radius":24,"fill":{"gradient":"visor"},"stroke":"#71E6FF","strokeWidth":2,"shadow":{"color":"#3FCCFF","blur":18}},{"id":"circle-8","type":"circle","x":338,"y":201,"radius":14,"fill":"#A8F3FF","shadow":{"color":"#72E8FF","blur":14}},{"id":"circle-9","type":"circle","x":430,"y":201,"radius":14,"fill":"#A8F3FF","shadow":{"color":"#72E8FF","blur":14}},{"id":"line-27","type":"line","x1":360,"y1":248,"x2":408,"y2":248,"stroke":"#536B7C","strokeWidth":4,"lineCap":"round"},{"id":"line-28","type":"line","x1":384,"y1":132,"x2":384,"y2":86,"stroke":"#8EA3B3","strokeWidth":6,"lineCap":"round"},{"id":"circle-10","type":"circle","x":384,"y":76,"radius":13,"fill":"#6FE5FF","stroke":"#D7FBFF","strokeWidth":2,"shadow":{"color":"#6FE5FF","blur":20}},{"id":"line-29","type":"line","x1":318,"y1":500,"x2":450,"y2":500,"stroke":"#87A0AF","strokeWidth":2,"opacity":0.7},{"id":"text-1","type":"text","x":384,"y":524,"text":"CIE-07","fontSize":17,"fontFamily":"monospace","fontWeight":"700","fill":"#BEEFF8","align":"center"},{"id":"text-2","type":"text","x":384,"y":738,"text":"COORDINATE UNIT","fontSize":13,"fontFamily":"sans-serif","fontWeight":"600","fill":"#6E8DA0","align":"center"}]},"abstract-art":{"protocol":"coordinate-image-v1","canvas":{"width":800,"height":800,"background":{"gradient":"backdrop"}},"metadata":{"title":"Chromatic Orbit","description":" layered abstract art using translucent geometry, gradients, curves, dashes, and controlled rotation.","tags":["abstract","poster","geometry","transforms"]},"gradients":{"backdrop":{"type":"linear","x1":0,"y1":0,"x2":800,"y2":800,"stops":[{"offset":0,"color":"#171526"},{"offset":0.55,"color":"#2A1740"},{"offset":1,"color":"#0B1528"}]},"orb":{"type":"radial","cx":344,"cy":276,"r":278,"stops":[{"offset":0,"color":"#FFD6A5"},{"offset":0.38,"color":"#E65F7A"},{"offset":0.76,"color":"#7B4BC4"},{"offset":1,"color":"#2A2E7C"}]},"sweep":{"type":"linear","x1":0,"y1":0,"x2":0,"y2":444,"stops":[{"offset":0,"color":"#FFFFFF"},{"offset":1,"color":"#7BDFF2"}]}},"elements":[{"id":"rounded_rectangle-1","type":"rounded-rectangle","x":42,"y":42,"width":716,"height":716,"radius":36,"fill":"#FFFFFF06","stroke":"#FFFFFF33","strokeWidth":2},{"id":"circle-1","type":"circle","x":412,"y":334,"radius":221,"fill":{"gradient":"orb"},"shadow":{"color":"#EC6B8A88","blur":70,"offsetX":-30,"offsetY":18}},{"id":"circle-2","type":"circle","x":412,"y":334,"radius":160,"fill":"#FFFFFF08","stroke":"#FFE4EC99","strokeWidth":2},{"id":"group-1","type":"group","children":[{"id":"rounded_rectangle-2","type":"rounded-rectangle","x":128,"y":112,"width":44,"height":444,"radius":22,"fill":{"gradient":"sweep"},"opacity":0.16,"transform":{"origin":[150,334],"rotate":-18}},{"id":"rounded_rectangle-3","type":"rounded-rectangle","x":204,"y":112,"width":44,"height":444,"radius":22,"fill":{"gradient":"sweep"},"opacity":0.195,"transform":{"origin":[226,334],"rotate":-18}},{"id":"rounded_rectangle-4","type":"rounded-rectangle","x":280,"y":112,"width":44,"height":444,"radius":22,"fill":{"gradient":"sweep"},"opacity":0.23,"transform":{"origin":[302,334],"rotate":-18}},{"id":"rounded_rectangle-5","type":"rounded-rectangle","x":356,"y":112,"width":44,"height":444,"radius":22,"fill":{"gradient":"sweep"},"opacity":0.265,"transform":{"origin":[378,334],"rotate":-18}},{"id":"rounded_rectangle-6","type":"rounded-rectangle","x":432,"y":112,"width":44,"height":444,"radius":22,"fill":{"gradient":"sweep"},"opacity":0.30000000000000004,"transform":{"origin":[454,334],"rotate":-18}},{"id":"rounded_rectangle-7","type":"rounded-rectangle","x":508,"y":112,"width":44,"height":444,"radius":22,"fill":{"gradient":"sweep"},"opacity":0.335,"transform":{"origin":[530,334],"rotate":-18}},{"id":"rounded_rectangle-8","type":"rounded-rectangle","x":584,"y":112,"width":44,"height":444,"radius":22,"fill":{"gradient":"sweep"},"opacity":0.37,"transform":{"origin":[606,334],"rotate":-18}}]},{"id":"path-1","type":"path","d":"M 76 560 C 178 472 238 630 336 510 C 432 392 486 472 548 382 C 616 284 684 314 736 236","stroke":"#F8D6A2","strokeWidth":14,"opacity":0.9,"lineCap":"round","lineJoin":"round"},{"id":"path-2","type":"path","d":"M 112 612 C 230 500 332 580 414 464 C 506 334 572 396 696 300","stroke":"#8CE2E4","strokeWidth":3,"opacity":0.72,"dash":[18,14],"lineCap":"round"},{"id":"polygon-1","type":"polygon","points":[[108,204],[286,118],[342,242],[178,288]],"fill":"#FFD16644","stroke":"#FFE7A6","strokeWidth":2,"transform":{"origin":[220,202],"rotate":12}},{"id":"polygon-2","type":"polygon","points":[[566,458],[710,404],[670,590],[524,544]],"fill":"#6C63FF55","stroke":"#C5C2FF","strokeWidth":2,"transform":{"origin":[620,500],"rotate":-13}},{"id":"ellipse-1","type":"ellipse","x":604,"y":182,"radiusX":90,"radiusY":34,"fill":"#8CE2E455","stroke":"#C2F5F2","strokeWidth":2,"transform":{"origin":[604,182],"rotate":-28}},{"id":"polyline-1","type":"polyline","points":[[142,670],[226,612],[286,668],[360,596],[438,660],[526,580],[658,624]],"stroke":"#FFE9D1","strokeWidth":2,"opacity":0.52,"lineJoin":"round"},{"id":"line-1","type":"line","x1":402,"y1":88,"x2":402,"y2":712,"stroke":"#FFFFFF55","strokeWidth":1,"opacity":0.6},{"id":"line-2","type":"line","x1":88,"y1":400,"x2":712,"y2":400,"stroke":"#FFFFFF55","strokeWidth":1,"opacity":0.6},{"id":"group-2","type":"group","children":[{"id":"circle-3","type":"circle","x":172,"y":116,"radius":7,"fill":"#FFF4D6","opacity":0.8},{"id":"circle-4","type":"circle","x":224,"y":116,"radius":4,"fill":"#FFF4D6","opacity":0.8},{"id":"circle-5","type":"circle","x":276,"y":116,"radius":7,"fill":"#FFF4D6","opacity":0.8},{"id":"circle-6","type":"circle","x":328,"y":116,"radius":4,"fill":"#FFF4D6","opacity":0.8},{"id":"circle-7","type":"circle","x":108,"y":342,"radius":5,"fill":"#FFF4D6","opacity":0.8},{"id":"circle-8","type":"circle","x":696,"y":342,"radius":5,"fill":"#FFF4D6","opacity":0.8},{"id":"circle-9","type":"circle","x":578,"y":668,"radius":6,"fill":"#FFF4D6","opacity":0.8},{"id":"circle-10","type":"circle","x":622,"y":668,"radius":4,"fill":"#FFF4D6","opacity":0.8},{"id":"circle-11","type":"circle","x":666,"y":668,"radius":6,"fill":"#FFF4D6","opacity":0.8}]},{"id":"text-1","type":"text","x":82,"y":728,"text":"FORM / 01","fontSize":18,"fontFamily":"sans-serif","fontWeight":"700","fill":"#F4EDE3","baseline":"bottom"},{"id":"text-2","type":"text","x":718,"y":92,"text":"GENERATIVE GEOMETRY","fontSize":12,"fontFamily":"monospace","fontWeight":"400","fill":"#B7B0AC","align":"right"}]},"app-icon":{"protocol":"coordinate-image-v1","canvas":{"width":512,"height":512,"background":"#0B1020"},"metadata":{"title":"Coordinate App Icon","description":"A crisp, scalable app icon with a coordinate glyph, luminous core, grid, rounded tile, and shadow.","tags":["app-icon","glyph","grid","gradient"]},"gradients":{"tile":{"type":"linear","x1":64,"y1":48,"x2":448,"y2":464,"stops":[{"offset":0,"color":"#214C72"},{"offset":0.48,"color":"#102A4B"},{"offset":1,"color":"#081326"}]},"core":{"type":"radial","cx":218,"cy":190,"r":158,"stops":[{"offset":0,"color":"#C5F8FF"},{"offset":0.35,"color":"#47C5E8"},{"offset":1,"color":"#15558C"}]}},"elements":[{"id":"rounded_rectangle-1","type":"rounded-rectangle","x":32,"y":32,"width":448,"height":448,"radius":112,"fill":{"gradient":"tile"},"stroke":"#FFFFFF22","strokeWidth":2,"shadow":{"color":"#00000099","blur":34,"offsetX":0,"offsetY":18}},{"id":"rounded_rectangle-2","type":"rounded-rectangle","x":60,"y":60,"width":392,"height":392,"radius":92,"fill":"#FFFFFF08","stroke":"#FFFFFF1F","strokeWidth":1.5},{"id":"group-1","type":"group","children":[{"id":"line-1","type":"line","x1":160,"y1":96,"x2":160,"y2":416,"stroke":"#C8F4FF","strokeWidth":1,"opacity":0.11},{"id":"line-2","type":"line","x1":96,"y1":160,"x2":416,"y2":160,"stroke":"#C8F4FF","strokeWidth":1,"opacity":0.11},{"id":"line-3","type":"line","x1":208,"y1":96,"x2":208,"y2":416,"stroke":"#C8F4FF","strokeWidth":1,"opacity":0.11},{"id":"line-4","type":"line","x1":96,"y1":208,"x2":416,"y2":208,"stroke":"#C8F4FF","strokeWidth":1,"opacity":0.11},{"id":"line-5","type":"line","x1":256,"y1":96,"x2":256,"y2":416,"stroke":"#C8F4FF","strokeWidth":1,"opacity":0.11},{"id":"line-6","type":"line","x1":96,"y1":256,"x2":416,"y2":256,"stroke":"#C8F4FF","strokeWidth":1,"opacity":0.11},{"id":"line-7","type":"line","x1":304,"y1":96,"x2":304,"y2":416,"stroke":"#C8F4FF","strokeWidth":1,"opacity":0.11},{"id":"line-8","type":"line","x1":96,"y1":304,"x2":416,"y2":304,"stroke":"#C8F4FF","strokeWidth":1,"opacity":0.11},{"id":"line-9","type":"line","x1":352,"y1":96,"x2":352,"y2":416,"stroke":"#C8F4FF","strokeWidth":1,"opacity":0.11},{"id":"line-10","type":"line","x1":96,"y1":352,"x2":416,"y2":352,"stroke":"#C8F4FF","strokeWidth":1,"opacity":0.11}]},{"id":"circle-1","type":"circle","x":256,"y":236,"radius":122,"fill":{"gradient":"core"},"stroke":"#A9F2FF","strokeWidth":3,"shadow":{"color":"#4BC8F0","blur":36}},{"id":"path-1","type":"path","d":"M 178 272 C 184 212 218 178 258 178 C 310 178 342 212 342 264 C 342 312 312 344 264 344 C 222 344 196 326 180 294","stroke":"#06182B","strokeWidth":24,"opacity":0.35,"lineCap":"round"},{"id":"path-2","type":"path","d":"M 178 260 C 184 200 218 166 258 166 C 310 166 342 200 342 252 C 342 300 312 332 264 332 C 222 332 196 314 180 282","stroke":"#E6FCFF","strokeWidth":16,"lineCap":"round"},{"id":"line-11","type":"line","x1":150,"y1":364,"x2":362,"y2":364,"stroke":"#A5ECFA","strokeWidth":10,"lineCap":"round"},{"id":"line-12","type":"line","x1":150,"y1":364,"x2":150,"y2":152,"stroke":"#A5ECFA","strokeWidth":10,"lineCap":"round"},{"id":"circle-2","type":"circle","x":150,"y":152,"radius":11,"fill":"#FFFFFF","stroke":"#4EB9D8","strokeWidth":4},{"id":"circle-3","type":"circle","x":362,"y":364,"radius":11,"fill":"#FFFFFF","stroke":"#4EB9D8","strokeWidth":4},{"id":"circle-4","type":"circle","x":256,"y":236,"radius":11,"fill":"#FFFFFF","stroke":"#4EB9D8","strokeWidth":4},{"id":"text-1","type":"text","x":256,"y":430,"text":"CIE","fontSize":34,"fontFamily":"monospace","fontWeight":"800","fill":"#DDF8FF","align":"center"}]},"poster-cover":{"protocol":"coordinate-image-v1","canvas":{"width":720,"height":960,"background":{"gradient":"night"}},"metadata":{"title":"North of Light","description":"A typographic poster cover with a graded sunrise, mountain silhouettes, fine contour lines, and print-like details.","tags":["poster","cover-art","typography","landscape"]},"gradients":{"night":{"type":"linear","x1":0,"y1":0,"x2":0,"y2":960,"stops":[{"offset":0,"color":"#1B2140"},{"offset":0.42,"color":"#79495B"},{"offset":0.68,"color":"#C9785E"},{"offset":1,"color":"#101827"}]},"dawn":{"type":"radial","cx":360,"cy":286,"r":174,"stops":[{"offset":0,"color":"#FFF1C8"},{"offset":0.55,"color":"#F4B071AA"},{"offset":1,"color":"#F4B07100"}]},"mountain":{"type":"linear","x1":0,"y1":340,"x2":0,"y2":650,"stops":[{"offset":0,"color":"#5D5265"},{"offset":1,"color":"#242B3C"}]}},"elements":[{"id":"rectangle-1","type":"rectangle","x":28,"y":28,"width":664,"height":904,"stroke":"#F5E6C833","strokeWidth":2},{"id":"circle-1","type":"circle","x":360,"y":286,"radius":174,"fill":{"gradient":"dawn"},"opacity":0.9},{"id":"circle-2","type":"circle","x":360,"y":286,"radius":100,"fill":"#FFE6B5","opacity":0.78},{"id":"ellipse-1","type":"ellipse","x":360,"y":292,"radiusX":252,"radiusY":28,"fill":"#F8C07A44"},{"id":"ellipse-2","type":"ellipse","x":360,"y":322,"radiusX":300,"radiusY":20,"fill":"#F8C07A22"},{"id":"polygon-1","type":"polygon","points":[[40,600],[164,392],[250,500],[354,344],[498,574],[608,420],[680,536],[680,640],[40,640]],"fill":{"gradient":"mountain"},"opacity":0.88},{"id":"polygon-2","type":"polygon","points":[[40,648],[188,488],[298,620],[410,454],[524,610],[680,502],[680,672],[40,672]],"fill":"#111D2C","opacity":0.95},{"id":"path-1","type":"path","d":"M 40 608 C 180 580 280 632 420 596 C 540 566 610 626 680 592","stroke":"#D1A98E","strokeWidth":1.5,"opacity":0.18},{"id":"path-2","type":"path","d":"M 40 628 C 180 600 280 652 420 616 C 540 586 610 646 680 612","stroke":"#D1A98E","strokeWidth":1.5,"opacity":0.22999999999999998},{"id":"path-3","type":"path","d":"M 40 650 C 180 622 280 674 420 638 C 540 608 610 668 680 634","stroke":"#D1A98E","strokeWidth":1.5,"opacity":0.28},{"id":"path-4","type":"path","d":"M 40 674 C 180 646 280 698 420 662 C 540 632 610 692 680 658","stroke":"#D1A98E","strokeWidth":1.5,"opacity":0.33},{"id":"group-1","type":"group","transform":{"translate":[610,138],"rotate":-18},"children":[{"id":"line-1","type":"line","x1":-34,"y1":0,"x2":34,"y2":0,"stroke":"#FFE8C8","strokeWidth":3,"lineCap":"round"},{"id":"circle-3","type":"circle","x":0,"y":0,"radius":8,"fill":"#FFE8C8"},{"id":"line-2","type":"line","x1":0,"y1":-24,"x2":0,"y2":24,"stroke":"#FFE8C8","strokeWidth":2,"opacity":0.6}]},{"id":"text-1","type":"text","x":62,"y":742,"text":"NORTH\nOF\nLIGHT","fontSize":78,"fontFamily":"sans-serif","fontWeight":"800","fill":"#F7EFE0","lineHeight":0.9,"maxWidth":540,"stroke":"#101820","strokeWidth":1.5,"lineJoin":"round"},{"id":"text-2","type":"text","x":64,"y":704,"text":"A COORDINATE IMAGE ENGINE EDITION","fontSize":13,"fontFamily":"monospace","fontWeight":"400","fill":"#D4BFA8"},{"id":"line-3","type":"line","x1":62,"y1":782,"x2":658,"y2":782,"stroke":"#F7EFE066","strokeWidth":1},{"id":"text-3","type":"text","x":62,"y":824,"text":"VOLUME 01  /  VECTOR STUDIES","fontSize":15,"fontFamily":"sans-serif","fontWeight":"600","fill":"#E7D8C3"},{"id":"text-4","type":"text","x":658,"y":824,"text":"2026","fontSize":15,"fontFamily":"monospace","fill":"#C5B19B","align":"right"},{"id":"group-2","type":"group","children":[{"id":"rectangle-2","type":"rectangle","x":62,"y":868,"width":2,"height":30,"fill":"#D9C7B2","opacity":0.65},{"id":"rectangle-3","type":"rectangle","x":72,"y":868,"width":4,"height":30,"fill":"#D9C7B2","opacity":0.65},{"id":"rectangle-4","type":"rectangle","x":82,"y":868,"width":2,"height":30,"fill":"#D9C7B2","opacity":0.65},{"id":"rectangle-5","type":"rectangle","x":92,"y":868,"width":6,"height":30,"fill":"#D9C7B2","opacity":0.65},{"id":"rectangle-6","type":"rectangle","x":102,"y":868,"width":3,"height":30,"fill":"#D9C7B2","opacity":0.65},{"id":"rectangle-7","type":"rectangle","x":112,"y":868,"width":2,"height":30,"fill":"#D9C7B2","opacity":0.65},{"id":"rectangle-8","type":"rectangle","x":122,"y":868,"width":5,"height":30,"fill":"#D9C7B2","opacity":0.65},{"id":"rectangle-9","type":"rectangle","x":132,"y":868,"width":2,"height":30,"fill":"#D9C7B2","opacity":0.65},{"id":"rectangle-10","type":"rectangle","x":142,"y":868,"width":3,"height":30,"fill":"#D9C7B2","opacity":0.65},{"id":"rectangle-11","type":"rectangle","x":152,"y":868,"width":6,"height":30,"fill":"#D9C7B2","opacity":0.65},{"id":"rectangle-12","type":"rectangle","x":162,"y":868,"width":2,"height":30,"fill":"#D9C7B2","opacity":0.65},{"id":"rectangle-13","type":"rectangle","x":172,"y":868,"width":4,"height":30,"fill":"#D9C7B2","opacity":0.65}]},{"id":"text-5","type":"text","x":658,"y":888,"text":"CIE-V1","fontSize":12,"fontFamily":"monospace","fill":"#A89582","align":"right"}]},"simple-diagram":{"protocol":"coordinate-image-v1","canvas":{"width":960,"height":600,"background":"#F7F8FA"},"metadata":{"title":"Coordinate Pipeline Diagram","description":"A clean three-stage technical diagram with cards, dashed connectors, arrowheads, labels, and local-processing notes.","tags":["diagram","workflow","documentation","clean"]},"gradients":{"cardA":{"type":"linear","x1":80,"y1":212,"x2":300,"y2":426,"stops":[{"offset":0,"color":"#EAF4FF"},{"offset":1,"color":"#D9E9FA"}]},"cardB":{"type":"linear","x1":370,"y1":212,"x2":590,"y2":426,"stops":[{"offset":0,"color":"#F1EEFF"},{"offset":1,"color":"#E5DEFA"}]},"cardC":{"type":"linear","x1":660,"y1":212,"x2":880,"y2":426,"stops":[{"offset":0,"color":"#EAF8F3"},{"offset":1,"color":"#D7EFE5"}]}},"elements":[{"id":"text-1","type":"text","x":60,"y":74,"text":"How Coordinate Image Engine works","fontSize":34,"fontFamily":"sans-serif","fontWeight":"700","fill":"#17202A"},{"id":"text-2","type":"text","x":60,"y":108,"text":"A local, three-step pipeline from text instructions to pixels","fontSize":16,"fontFamily":"sans-serif","fontWeight":"400","fill":"#59636E"},{"id":"line-1","type":"line","x1":60,"y1":136,"x2":900,"y2":136,"stroke":"#D9DEE5","strokeWidth":2},{"id":"rounded_rectangle-1","type":"rounded-rectangle","x":80,"y":212,"width":220,"height":214,"radius":18,"fill":{"gradient":"cardA"},"stroke":"#C6D0DB","strokeWidth":1.5,"shadow":{"color":"#1D2A3A1A","blur":18,"offsetX":0,"offsetY":8}},{"id":"circle-1","type":"circle","x":124,"y":258,"radius":22,"fill":"#FFFFFFCC","stroke":"#93A4B5","strokeWidth":1.5},{"id":"text-3","type":"text","x":124,"y":264,"text":"01","fontSize":16,"fontFamily":"monospace","fontWeight":"700","fill":"#25374A","align":"center","baseline":"middle"},{"id":"text-4","type":"text","x":104,"y":325,"text":"Text model","fontSize":22,"fontFamily":"sans-serif","fontWeight":"700","fill":"#17202A"},{"id":"text-5","type":"text","x":104,"y":356,"text":"Generates structured\nJSON drawing\ninstructions.","fontSize":14,"fontFamily":"sans-serif","fontWeight":"400","fill":"#4A5561","lineHeight":1.35},{"id":"rounded_rectangle-2","type":"rounded-rectangle","x":370,"y":212,"width":220,"height":214,"radius":18,"fill":{"gradient":"cardB"},"stroke":"#C6D0DB","strokeWidth":1.5,"shadow":{"color":"#1D2A3A1A","blur":18,"offsetX":0,"offsetY":8}},{"id":"circle-2","type":"circle","x":414,"y":258,"radius":22,"fill":"#FFFFFFCC","stroke":"#93A4B5","strokeWidth":1.5},{"id":"text-6","type":"text","x":414,"y":264,"text":"02","fontSize":16,"fontFamily":"monospace","fontWeight":"700","fill":"#25374A","align":"center","baseline":"middle"},{"id":"text-7","type":"text","x":394,"y":325,"text":"Validator","fontSize":22,"fontFamily":"sans-serif","fontWeight":"700","fill":"#17202A"},{"id":"text-8","type":"text","x":394,"y":356,"text":"Checks schema, bounds,\nreferences, and\npath safety.","fontSize":14,"fontFamily":"sans-serif","fontWeight":"400","fill":"#4A5561","lineHeight":1.35},{"id":"rounded_rectangle-3","type":"rounded-rectangle","x":660,"y":212,"width":220,"height":214,"radius":18,"fill":{"gradient":"cardC"},"stroke":"#C6D0DB","strokeWidth":1.5,"shadow":{"color":"#1D2A3A1A","blur":18,"offsetX":0,"offsetY":8}},{"id":"circle-3","type":"circle","x":704,"y":258,"radius":22,"fill":"#FFFFFFCC","stroke":"#93A4B5","strokeWidth":1.5},{"id":"text-9","type":"text","x":704,"y":264,"text":"03","fontSize":16,"fontFamily":"monospace","fontWeight":"700","fill":"#25374A","align":"center","baseline":"middle"},{"id":"text-10","type":"text","x":684,"y":325,"text":"Renderer","fontSize":22,"fontFamily":"sans-serif","fontWeight":"700","fill":"#17202A"},{"id":"text-11","type":"text","x":684,"y":356,"text":"Draws deterministic\nvector layers\non Canvas.","fontSize":14,"fontFamily":"sans-serif","fontWeight":"400","fill":"#4A5561","lineHeight":1.35},{"id":"line-2","type":"line","x1":310,"y1":319,"x2":360,"y2":319,"stroke":"#46586A","strokeWidth":2.5,"dash":[7,6],"lineCap":"round"},{"id":"polygon-1","type":"polygon","points":[[362,312],[376,319],[362,326]],"fill":"#46586A"},{"id":"line-3","type":"line","x1":600,"y1":319,"x2":650,"y2":319,"stroke":"#46586A","strokeWidth":2.5,"dash":[7,6],"lineCap":"round"},{"id":"polygon-2","type":"polygon","points":[[652,312],[666,319],[652,326]],"fill":"#46586A"},{"id":"rounded_rectangle-4","type":"rounded-rectangle","x":208,"y":474,"width":544,"height":66,"radius":14,"fill":"#EEF2F6","stroke":"#C6D0DB","strokeWidth":1.5},{"id":"text-12","type":"text","x":480,"y":501,"text":"No backend. No API key. JSON stays in your browser.","fontSize":16,"fontFamily":"sans-serif","fontWeight":"600","fill":"#344252","align":"center"},{"id":"text-13","type":"text","x":480,"y":523,"text":"Output: PNG image + editable JSON","fontSize":12,"fontFamily":"monospace","fill":"#6A7683","align":"center"}]},"stylized-architecture":{"protocol":"coordinate-image-v1","canvas":{"width":960,"height":640,"background":{"gradient":"sky"}},"metadata":{"title":"Metro Grid","description":"A stylized city skyline with atmospheric gradients, layered clouds, repeated windows, reflections, and street lights.","tags":["architecture","city","skyline","repetition"]},"gradients":{"sky":{"type":"linear","x1":0,"y1":0,"x2":0,"y2":520,"stops":[{"offset":0,"color":"#25304F"},{"offset":0.46,"color":"#A46C70"},{"offset":0.78,"color":"#E1A078"},{"offset":1,"color":"#F3C794"}]},"sun":{"type":"radial","cx":768,"cy":132,"r":112,"stops":[{"offset":0,"color":"#FFF0C4"},{"offset":0.55,"color":"#FFD09FDD"},{"offset":1,"color":"#FFD09F00"}]},"tower":{"type":"linear","x1":420,"y1":170,"x2":540,"y2":520,"stops":[{"offset":0,"color":"#496A7C"},{"offset":0.5,"color":"#30495B"},{"offset":1,"color":"#1C3141"}]},"ground":{"type":"linear","x1":0,"y1":520,"x2":0,"y2":640,"stops":[{"offset":0,"color":"#2B4050"},{"offset":1,"color":"#0D1D28"}]}},"elements":[{"id":"circle-1","type":"circle","x":768,"y":132,"radius":112,"fill":{"gradient":"sun"},"opacity":0.95},{"id":"group-5","type":"group","children":[{"id":"group-1","type":"group","transform":{"translate":[154,118],"scale":[1,1]},"children":[{"id":"ellipse-1","type":"ellipse","x":0,"y":8,"radiusX":74,"radiusY":18,"fill":"#F6E5D2","opacity":0.72},{"id":"circle-2","type":"circle","x":-36,"y":0,"radius":23,"fill":"#F6E5D2","opacity":0.72},{"id":"circle-3","type":"circle","x":0,"y":-10,"radius":32,"fill":"#F9ECDD","opacity":0.76},{"id":"circle-4","type":"circle","x":36,"y":2,"radius":21,"fill":"#F6E5D2","opacity":0.72}]},{"id":"group-2","type":"group","transform":{"translate":[250,92],"scale":[0.7,0.7]},"children":[{"id":"ellipse-2","type":"ellipse","x":0,"y":8,"radiusX":74,"radiusY":18,"fill":"#F6E5D2","opacity":0.72},{"id":"circle-5","type":"circle","x":-36,"y":0,"radius":23,"fill":"#F6E5D2","opacity":0.72},{"id":"circle-6","type":"circle","x":0,"y":-10,"radius":32,"fill":"#F9ECDD","opacity":0.76},{"id":"circle-7","type":"circle","x":36,"y":2,"radius":21,"fill":"#F6E5D2","opacity":0.72}]},{"id":"group-3","type":"group","transform":{"translate":[384,136],"scale":[0.86,0.86]},"children":[{"id":"ellipse-3","type":"ellipse","x":0,"y":8,"radiusX":74,"radiusY":18,"fill":"#F6E5D2","opacity":0.72},{"id":"circle-8","type":"circle","x":-36,"y":0,"radius":23,"fill":"#F6E5D2","opacity":0.72},{"id":"circle-9","type":"circle","x":0,"y":-10,"radius":32,"fill":"#F9ECDD","opacity":0.76},{"id":"circle-10","type":"circle","x":36,"y":2,"radius":21,"fill":"#F6E5D2","opacity":0.72}]},{"id":"group-4","type":"group","transform":{"translate":[612,82],"scale":[0.62,0.62]},"children":[{"id":"ellipse-4","type":"ellipse","x":0,"y":8,"radiusX":74,"radiusY":18,"fill":"#F6E5D2","opacity":0.72},{"id":"circle-11","type":"circle","x":-36,"y":0,"radius":23,"fill":"#F6E5D2","opacity":0.72},{"id":"circle-12","type":"circle","x":0,"y":-10,"radius":32,"fill":"#F9ECDD","opacity":0.76},{"id":"circle-13","type":"circle","x":36,"y":2,"radius":21,"fill":"#F6E5D2","opacity":0.72}]}]},{"id":"group-6","type":"group","children":[{"id":"rectangle-1","type":"rectangle","x":60,"y":330,"width":94,"height":190,"fill":"#35495B"},{"id":"rectangle-2","type":"rectangle","x":74,"y":352,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-3","type":"rectangle","x":100,"y":352,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-4","type":"rectangle","x":74,"y":386,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-5","type":"rectangle","x":100,"y":386,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-6","type":"rectangle","x":74,"y":420,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-7","type":"rectangle","x":100,"y":420,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-8","type":"rectangle","x":74,"y":454,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-9","type":"rectangle","x":100,"y":454,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-10","type":"rectangle","x":164,"y":282,"width":110,"height":238,"fill":"#293F52"},{"id":"rectangle-11","type":"rectangle","x":178,"y":304,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-12","type":"rectangle","x":204,"y":304,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-13","type":"rectangle","x":230,"y":304,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-14","type":"rectangle","x":178,"y":338,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-15","type":"rectangle","x":204,"y":338,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-16","type":"rectangle","x":230,"y":338,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-17","type":"rectangle","x":178,"y":372,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-18","type":"rectangle","x":204,"y":372,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-19","type":"rectangle","x":230,"y":372,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-20","type":"rectangle","x":178,"y":406,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-21","type":"rectangle","x":204,"y":406,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-22","type":"rectangle","x":230,"y":406,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-23","type":"rectangle","x":178,"y":440,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-24","type":"rectangle","x":204,"y":440,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-25","type":"rectangle","x":230,"y":440,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-26","type":"rectangle","x":284,"y":352,"width":86,"height":168,"fill":"#405669"},{"id":"rectangle-27","type":"rectangle","x":298,"y":374,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-28","type":"rectangle","x":324,"y":374,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-29","type":"rectangle","x":298,"y":408,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-30","type":"rectangle","x":324,"y":408,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-31","type":"rectangle","x":298,"y":442,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-32","type":"rectangle","x":324,"y":442,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-33","type":"rectangle","x":588,"y":312,"width":102,"height":208,"fill":"#31485C"},{"id":"rectangle-34","type":"rectangle","x":602,"y":334,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-35","type":"rectangle","x":628,"y":334,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-36","type":"rectangle","x":654,"y":334,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-37","type":"rectangle","x":602,"y":368,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-38","type":"rectangle","x":628,"y":368,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-39","type":"rectangle","x":654,"y":368,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-40","type":"rectangle","x":602,"y":402,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-41","type":"rectangle","x":628,"y":402,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-42","type":"rectangle","x":654,"y":402,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-43","type":"rectangle","x":602,"y":436,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-44","type":"rectangle","x":628,"y":436,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-45","type":"rectangle","x":654,"y":436,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-46","type":"rectangle","x":700,"y":268,"width":126,"height":252,"fill":"#253B50"},{"id":"rectangle-47","type":"rectangle","x":714,"y":290,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-48","type":"rectangle","x":740,"y":290,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-49","type":"rectangle","x":766,"y":290,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-50","type":"rectangle","x":714,"y":324,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-51","type":"rectangle","x":740,"y":324,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-52","type":"rectangle","x":766,"y":324,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-53","type":"rectangle","x":714,"y":358,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-54","type":"rectangle","x":740,"y":358,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-55","type":"rectangle","x":766,"y":358,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-56","type":"rectangle","x":714,"y":392,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-57","type":"rectangle","x":740,"y":392,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-58","type":"rectangle","x":766,"y":392,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-59","type":"rectangle","x":714,"y":426,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-60","type":"rectangle","x":740,"y":426,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-61","type":"rectangle","x":766,"y":426,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-62","type":"rectangle","x":714,"y":460,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48},{"id":"rectangle-63","type":"rectangle","x":740,"y":460,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-64","type":"rectangle","x":766,"y":460,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-65","type":"rectangle","x":836,"y":348,"width":72,"height":172,"fill":"#3E566A"},{"id":"rectangle-66","type":"rectangle","x":850,"y":370,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.22},{"id":"rectangle-67","type":"rectangle","x":850,"y":404,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.35},{"id":"rectangle-68","type":"rectangle","x":850,"y":438,"width":10,"height":15,"fill":"#B7E7EA","opacity":0.48}]},{"id":"polygon-1","type":"polygon","points":[[400,164],[480,108],[560,164],[540,176],[420,176]],"fill":"#23384A"},{"id":"rectangle-69","type":"rectangle","x":420,"y":170,"width":120,"height":350,"fill":{"gradient":"tower"},"stroke":"#6B8897","strokeWidth":2},{"id":"polygon-2","type":"polygon","points":[[420,170],[480,126],[540,170],[540,190],[420,190]],"fill":"#304B5E","opacity":0.92},{"id":"rounded_rectangle-1","type":"rounded-rectangle","x":444,"y":212,"width":72,"height":22,"radius":5,"fill":"#BDEFF0","opacity":0.48,"stroke":"#93C8D0","strokeWidth":1},{"id":"rounded_rectangle-2","type":"rounded-rectangle","x":444,"y":258,"width":72,"height":22,"radius":5,"fill":"#BDEFF0","opacity":0.48,"stroke":"#93C8D0","strokeWidth":1},{"id":"rounded_rectangle-3","type":"rounded-rectangle","x":444,"y":304,"width":72,"height":22,"radius":5,"fill":"#BDEFF0","opacity":0.48,"stroke":"#93C8D0","strokeWidth":1},{"id":"rounded_rectangle-4","type":"rounded-rectangle","x":444,"y":350,"width":72,"height":22,"radius":5,"fill":"#BDEFF0","opacity":0.48,"stroke":"#93C8D0","strokeWidth":1},{"id":"rounded_rectangle-5","type":"rounded-rectangle","x":444,"y":396,"width":72,"height":22,"radius":5,"fill":"#BDEFF0","opacity":0.48,"stroke":"#93C8D0","strokeWidth":1},{"id":"rounded_rectangle-6","type":"rounded-rectangle","x":444,"y":442,"width":72,"height":22,"radius":5,"fill":"#BDEFF0","opacity":0.48,"stroke":"#93C8D0","strokeWidth":1},{"id":"rounded_rectangle-7","type":"rounded-rectangle","x":444,"y":488,"width":72,"height":22,"radius":5,"fill":"#BDEFF0","opacity":0.48,"stroke":"#93C8D0","strokeWidth":1},{"id":"line-1","type":"line","x1":480,"y1":126,"x2":480,"y2":82,"stroke":"#293F52","strokeWidth":4,"lineCap":"round"},{"id":"circle-14","type":"circle","x":480,"y":76,"radius":7,"fill":"#FFD7A0","shadow":{"color":"#FFD7A0","blur":14}},{"id":"rectangle-70","type":"rectangle","x":0,"y":520,"width":960,"height":120,"fill":{"gradient":"ground"}},{"id":"path-1","type":"path","d":"M 0 520 C 170 494 300 542 480 518 C 650 496 790 532 960 508 L 960 640 L 0 640 Z","fill":"#162835","opacity":0.88},{"id":"group-11","type":"group","children":[{"id":"group-7","type":"group","transform":{"translate":[100,520],"scale":[1,1]},"children":[{"id":"line-2","type":"line","x1":0,"y1":0,"x2":0,"y2":-102,"stroke":"#1B2D38","strokeWidth":6,"lineCap":"round"},{"id":"line-3","type":"line","x1":0,"y1":-102,"x2":32,"y2":-102,"stroke":"#1B2D38","strokeWidth":5,"lineCap":"round"},{"id":"circle-15","type":"circle","x":32,"y":-98,"radius":10,"fill":"#FFE3A3","shadow":{"color":"#FFC46B","blur":22}},{"id":"ellipse-5","type":"ellipse","x":0,"y":4,"radiusX":18,"radiusY":5,"fill":"#0C1B24","opacity":0.6}]},{"id":"group-8","type":"group","transform":{"translate":[860,520],"scale":[1,1]},"children":[{"id":"line-4","type":"line","x1":0,"y1":0,"x2":0,"y2":-102,"stroke":"#1B2D38","strokeWidth":6,"lineCap":"round"},{"id":"line-5","type":"line","x1":0,"y1":-102,"x2":32,"y2":-102,"stroke":"#1B2D38","strokeWidth":5,"lineCap":"round"},{"id":"circle-16","type":"circle","x":32,"y":-98,"radius":10,"fill":"#FFE3A3","shadow":{"color":"#FFC46B","blur":22}},{"id":"ellipse-6","type":"ellipse","x":0,"y":4,"radiusX":18,"radiusY":5,"fill":"#0C1B24","opacity":0.6}]},{"id":"group-9","type":"group","transform":{"translate":[248,520],"scale":[0.8,0.8]},"children":[{"id":"line-6","type":"line","x1":0,"y1":0,"x2":0,"y2":-102,"stroke":"#1B2D38","strokeWidth":6,"lineCap":"round"},{"id":"line-7","type":"line","x1":0,"y1":-102,"x2":32,"y2":-102,"stroke":"#1B2D38","strokeWidth":5,"lineCap":"round"},{"id":"circle-17","type":"circle","x":32,"y":-98,"radius":10,"fill":"#FFE3A3","shadow":{"color":"#FFC46B","blur":22}},{"id":"ellipse-7","type":"ellipse","x":0,"y":4,"radiusX":18,"radiusY":5,"fill":"#0C1B24","opacity":0.6}]},{"id":"group-10","type":"group","transform":{"translate":[712,520],"scale":[0.8,0.8]},"children":[{"id":"line-8","type":"line","x1":0,"y1":0,"x2":0,"y2":-102,"stroke":"#1B2D38","strokeWidth":6,"lineCap":"round"},{"id":"line-9","type":"line","x1":0,"y1":-102,"x2":32,"y2":-102,"stroke":"#1B2D38","strokeWidth":5,"lineCap":"round"},{"id":"circle-18","type":"circle","x":32,"y":-98,"radius":10,"fill":"#FFE3A3","shadow":{"color":"#FFC46B","blur":22}},{"id":"ellipse-8","type":"ellipse","x":0,"y":4,"radiusX":18,"radiusY":5,"fill":"#0C1B24","opacity":0.6}]}]},{"id":"line-10","type":"line","x1":540,"y1":88,"x2":880,"y2":88,"stroke":"#D9BFA5","strokeWidth":2,"opacity":0.16,"lineCap":"round"},{"id":"line-11","type":"line","x1":566,"y1":168,"x2":826,"y2":168,"stroke":"#D9BFA5","strokeWidth":2,"opacity":0.13,"lineCap":"round"},{"id":"line-12","type":"line","x1":592,"y1":244,"x2":1002,"y2":244,"stroke":"#D9BFA5","strokeWidth":2,"opacity":0.12,"lineCap":"round"},{"id":"line-13","type":"line","x1":566,"y1":318,"x2":866,"y2":318,"stroke":"#D9BFA5","strokeWidth":2,"opacity":0.1,"lineCap":"round"},{"id":"line-14","type":"line","x1":584,"y1":390,"x2":924,"y2":390,"stroke":"#D9BFA5","strokeWidth":2,"opacity":0.08,"lineCap":"round"},{"id":"rounded_rectangle-8","type":"rounded-rectangle","x":38,"y":574,"width":196,"height":38,"radius":19,"fill":"#0E1D27","opacity":0.78,"stroke":"#7CA0AA","strokeWidth":1},{"id":"text-1","type":"text","x":54,"y":599,"text":"METRO GRID / 07","fontSize":14,"fontFamily":"monospace","fontWeight":"600","fill":"#C7E1E2"}]}}
+  </script>
+<!-- END AUTO-GENERATED: example-bundle -->
+
+  <!-- BEGIN AUTO-GENERATED: master-prompt -->
+  <script type="text/plain" id="master-prompt">
+UNIVERSAL MASTER PROMPT — COORDINATE IMAGE ENGINE
+
+You are now operating in a persistent mode called Coordinate Image Engine. Your job is to convert a user's visual request into a complete, valid coordinate-image-v1 JSON drawing document. You are not generating pixels yourself. A separate local browser renderer will interpret your JSON and draw the image.
+
+This mode remains active for the rest of this conversation unless the user explicitly asks you to leave it. It works with plain text generation; do not require an API, an account, a plugin, a paid image model, or a special tool.
+
+ACTIVATION RULE
+
+If the user activates this mode without describing an image, reply with exactly this sentence and nothing else:
+
+What kind of image would you like to create? Describe the subject, style, colors, mood, and any important details.
+
+Ask that onboarding question only once per conversation. After the user provides any image request, generate a complete JSON document immediately. Do not ask unnecessary follow-up questions. Use sensible defaults for missing style, size, palette, or detail. For every later image request in the same conversation, generate another complete JSON document without repeating the onboarding question.
+
+WHAT TO RETURN
+
+Return machine-readable drawing instructions, never a prose description of the imagined picture. Use exactly one of these output modes:
+
+A. If this environment has a real file-creation operation and it succeeds, you may create one downloadable .json file containing the complete document. Only say that a file was created or attached after the operation has actually been confirmed. You may give a short confirmation outside the file.
+
+B. If file creation is unavailable, uncertain, unreliable, or would require an unconfirmed tool operation, return the complete JSON document inside one fenced json code block. Put nothing else outside the code block. The contents must be directly copyable into the Coordinate Image Engine testing website.
+
+C. If response length is limited, simplify the composition while preserving the main subject, mood, and palette. Reduce repeated details and element count. Never truncate JSON or add a placeholder comment.
+
+D. Never add explanatory prose, comments, ellipses, pseudo-code, or notes inside the JSON. Never claim a file exists unless its creation was confirmed. Never wrap a partial object in a code block.
+
+Before responding, silently check that the JSON is syntactically valid, all keys are quoted, all strings and brackets are closed, there are no trailing commas, all numbers are finite, all element ids are unique, every gradient reference exists, and every element uses only supported properties. If the user reports a validation error, return the entire corrected JSON document, not a patch or an explanation.
+
+COMPOSITION METHOD
+
+1. Identify the subject, style, aspect ratio, mood, palette, focal point, and intended use.
+2. Sketch a layer plan mentally: background, atmosphere, distant shapes, main subject, structural details, lighting, highlights, shadows, foreground, labels, and texture.
+3. Use a clear focal point and visual hierarchy. Place important shapes away from accidental clipping. Use 4 to 6 harmonious colors plus neutral highlights and shadows.
+4. Build depth with overlapping silhouettes, scale changes, opacity, gradients, and value contrast. Create lighting with glow circles, translucent highlights, shadows, and gradient fills rather than unsupported filters.
+5. Add mechanical, natural, architectural, or typographic detail with repeated small shapes, lines, polygons, and paths. Reuse a controlled visual vocabulary.
+6. Prefer about 20 to 120 elements for a rich composition. A simpler valid image is better than a long invalid one. Use groups and transforms for repeated local structures.
+7. This is procedural vector-like graphics. It can approximate atmosphere and material, but it cannot promise photographic realism or reproduce arbitrary copyrighted artwork exactly.
+
+PROTOCOL CHEAT SHEET
+
+The document root must be an object with these required fields:
+
+{
+  "protocol": "coordinate-image-v1",
+  "canvas": {
+    "width": 960,
+    "height": 640,
+    "background": "#101820"
+  },
+  "metadata": {
+    "title": "Short Artwork Title",
+    "description": "One sentence about the composition"
+  },
+  "gradients": {},
+  "elements": []
+}
+
+Use width and height as integers from 16 through 4096. The total canvas area must be at most 16,000,000 pixels. Coordinates are logical pixels measured from the top-left corner: x increases rightward and y increases downward. Shapes outside the canvas are clipped. A sensible default is 960 by 640 for landscape, 768 by 768 for square, and 720 by 960 for portrait.
+
+The root may contain only protocol, canvas, metadata, gradients, and elements. metadata is optional and may contain title, description, author, license, and tags. Elements are drawn in array order from back to front. There is no z-index.
+
+Colors must be 3-digit, 6-digit, or 8-digit hexadecimal strings such as #123, #101820, or #FF880080. A paint value is either one of those color strings or an object such as {"gradient":"sky"}. The named gradient must exist in the top-level gradients object.
+
+A linear gradient looks like this:
+
+"sky": {
+  "type": "linear",
+  "x1": 0,
+  "y1": 0,
+  "x2": 0,
+  "y2": 640,
+  "stops": [
+    {"offset": 0, "color": "#10203A"},
+    {"offset": 1, "color": "#F0A060"}
+  ]
+}
+
+A radial gradient looks like this:
+
+"glow": {
+  "type": "radial",
+  "cx": 480,
+  "cy": 260,
+  "r": 220,
+  "stops": [
+    {"offset": 0, "color": "#FFFFFF"},
+    {"offset": 1, "color": "#FFFFFF00"}
+  ]
+}
+
+Gradient names and element ids must match this pattern: a letter followed by letters, digits, underscores, or hyphens; maximum 64 characters. All ids in a document must be unique. Gradient stops need at least 2 and at most 16 stops with offsets from 0 through 1.
+
+Every element needs a unique id and a type. Supported types are:
+
+- rectangle: x, y, width, height.
+- rounded-rectangle: x, y, width, height, radius.
+- circle: x, y, radius. Center is at x,y.
+- ellipse: x, y, radiusX, radiusY. Center is at x,y.
+- line: x1, y1, x2, y2, and a required stroke.
+- polyline: points as an array of at least two [x,y] pairs, and a required stroke.
+- polygon: points as an array of at least three [x,y] pairs; it is closed automatically.
+- path: d, using only the restricted path grammar below.
+- text: x, y, text; optionally fontSize, fontFamily, fontWeight, fontStyle, align, baseline, lineHeight, maxWidth, fill, and stroke.
+- group: children as a nonempty array of elements. Groups may have opacity, transform, and visible. Child styles are not inherited.
+
+Common optional element properties are fill, stroke, strokeWidth, lineCap, lineJoin, dash, opacity, transform, shadow, and visible. Use only properties defined for the chosen element type. omit fill to avoid filling and omit stroke to avoid outlining. strokeWidth defaults to 1. lineCap defaults to butt; lineJoin defaults to miter. opacity is from 0 through 1. shadow has color, blur, and optional offsetX and offsetY. dash is a short array of positive numbers. text fontFamily must be one of sans-serif, serif, monospace, or system-ui. Line breaks in text use the two-character backslash-n escape; a maximum of 32 lines is allowed.
+
+A transform is an object with one or more of translate [x,y], origin [x,y], rotate in degrees, and scale [x,y]. Coordinates are scaled about the origin, rotated clockwise about that origin, and then translated. Scale values must be positive. Group transforms apply to all descendants.
+
+The restricted SVG path grammar allows only M, L, H, V, C, Q, Z and their lowercase relative equivalents. Every segment must begin with its own explicit command letter; implicit repetition is not allowed. The first command must be M or m. Numbers may be decimals or scientific notation. Arcs, smooth curves, embedded markup, and arbitrary SVG are forbidden. Example:
+
+"d": "M 40 420 C 160 360 260 450 380 390 C 500 330 620 410 920 350 L 920 640 L 40 640 Z"
+
+The document rejects more than 1000 recursively counted elements, more than 8 nesting levels, more than 50000 complexity units, overly long text, unsupported properties, unsupported colors, invalid gradient references, and malformed paths. Keep path commands fewer than 256 per path and fewer than 4096 in total. Keep the full JSON under 512 KiB.
+
+OUTPUT DISCIPLINE
+
+Never describe the picture in prose when the user has requested an image. Never output an SVG, HTML document, JavaScript, Markdown image tag, base64 payload, or provider-specific tool call. Never use eval, event handlers, URLs, external assets, or executable code. Never pretend that you rendered or attached an image. You are returning safe declarative data.
+
+If the user asks for a correction, regenerate the full document with the requested change and preserve the rest of the composition. If the user asks for a simpler version, reduce detail while keeping the subject. If the user asks for a file and this environment cannot create one, use the fenced json code block and do not claim otherwise.
+
+OPTIONAL COMMAND NOTE
+
+Some agent environments can register /json-image as an alias for this prompt. A slash command is not universal. In ordinary chat products, paste this entire prompt once into a new conversation and continue using that same conversation. For future independent conversations, paste it again or use that product's supported persistent-instruction feature.
+  </script>
+<!-- END AUTO-GENERATED: master-prompt -->
+
+  <script id="app-code">
+"use strict";
+(() => {
+  const LIMITS = Object.freeze({
+    MAX_JSON_CHARS: 524288,
+    MAX_JSON_BYTES: 524288,
+    MAX_CANVAS_PIXELS: 16000000,
+    MAX_EXPORT_DIMENSION: 8192,
+    MAX_EXPORT_PIXELS: 16000000,
+    MAX_TOTAL_ELEMENTS: 1000,
+    MAX_NESTING: 8,
+    MAX_COMPLEXITY: 50000,
+    MAX_PATH_COMMANDS_TOTAL: 4096,
+    MAX_PATH_COMMANDS_EACH: 256,
+    MAX_PATH_CHARS: 8192,
+    MAX_PATH_NUMBER: 1000000,
+    MAX_TEXT_LINES: 32
+  });
+
+  const API = {
+    LIMITS,
+    SCHEMA: null,
+    EXAMPLES: {},
+    MASTER_PROMPT: ""
+  };
+  if (typeof globalThis !== "undefined") globalThis.CoordinateImageEngine = API;
+
+  const state = {
+    initialized: false,
+    currentDoc: null,
+    activeExample: null,
+    validationTimer: 0,
+    toastTimer: 0,
+    dom: {}
+  };
+
+  function isObject(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function setEmbeddedData(schema, examples, masterPrompt) {
+    API.SCHEMA = schema;
+    API.EXAMPLES = isObject(examples) ? examples : {};
+    API.MASTER_PROMPT = String(masterPrompt || "").trim();
+    return API;
+  }
+
+  function addError(errors, path, message, details) {
+    if (errors.length >= 100) return;
+    errors.push({ path: path || "$", message: String(message || "Invalid value."), details: details || [] });
+  }
+
+  function formatErrorShort(error) {
+    const where = error.path && error.path !== "$" ? error.path + ": " : "";
+    return where + error.message;
+  }
+
+  function joinPath(base, key) {
+    return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key) ? base + "." + key : base + "[" + JSON.stringify(key) + "]";
+  }
+
+  function stringLength(value) {
+    return Array.from(value).length;
+  }
+
+  function deepEqual(a, b) {
+    if (a === b) return true;
+    if (typeof a !== typeof b || a === null || b === null) return false;
+    if (Array.isArray(a) || Array.isArray(b)) {
+      if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+      return a.every((item, i) => deepEqual(item, b[i]));
+    }
+    if (isObject(a) || isObject(b)) {
+      if (!isObject(a) || !isObject(b)) return false;
+      const ak = Object.keys(a), bk = Object.keys(b);
+      return ak.length === bk.length && ak.every((key) => deepEqual(a[key], b[key]));
+    }
+    return false;
+  }
+
+  function resolvePointer(root, reference) {
+    if (reference === "#") return root;
+    if (typeof reference !== "string" || !reference.startsWith("#/")) {
+      throw new Error("Unsupported schema reference " + String(reference));
+    }
+    let current = root;
+    const parts = reference.slice(2).split("/").map((part) => part.replace(/~1/g, "/").replace(/~0/g, "~"));
+    for (const part of parts) {
+      if (current === null || typeof current !== "object" || !(part in current)) {
+        throw new Error("Unresolved schema reference " + reference);
+      }
+      current = current[part];
+    }
+    return current;
+  }
+
+  function branchTarget(branch, root) {
+    if (branch && typeof branch.$ref === "string") {
+      try { return resolvePointer(root, branch.$ref); } catch (_) { return branch; }
+    }
+    return branch;
+  }
+
+  function typeMatches(value, expected) {
+    switch (expected) {
+      case "object": return isObject(value);
+      case "array": return Array.isArray(value);
+      case "null": return value === null;
+      case "integer": return typeof value === "number" && Number.isInteger(value);
+      case "number": return typeof value === "number";
+      case "string": return typeof value === "string";
+      case "boolean": return typeof value === "boolean";
+      default: return true;
+    }
+  }
+
+  function validateNode(value, schema, root, path, errors, depth) {
+    if (!isObject(schema) || errors.length >= 100) return;
+    if (depth > 80) {
+      addError(errors, path, "Schema nesting limit exceeded.");
+      return;
+    }
+
+    if (typeof schema.$ref === "string") {
+      let target;
+      try { target = resolvePointer(root, schema.$ref); }
+      catch (error) { addError(errors, path, error.message); return; }
+      validateNode(value, target, root, path, errors, depth + 1);
+      return;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(schema, "const") && !deepEqual(value, schema.const)) {
+      addError(errors, path, "Value must equal " + JSON.stringify(schema.const) + ".");
+    }
+    if (Array.isArray(schema.enum) && !schema.enum.some((entry) => deepEqual(entry, value))) {
+      addError(errors, path, "Value must be one of: " + schema.enum.map((entry) => JSON.stringify(entry)).join(", ") + ".");
+    }
+
+    if (Array.isArray(schema.allOf)) {
+      for (const part of schema.allOf) validateNode(value, part, root, path, errors, depth + 1);
+    }
+
+    if (Array.isArray(schema.anyOf)) {
+      const branches = schema.anyOf.map((part) => {
+        const branchErrors = [];
+        validateNode(value, part, root, path, branchErrors, depth + 1);
+        return branchErrors;
+      });
+      if (!branches.some((branchErrors) => branchErrors.length === 0)) {
+        const best = branches.reduce((a, b) => b.length < a.length ? b : a, branches[0] || []);
+        addError(errors, path, "Value does not match any allowed form.", best.slice(0, 4).map(formatErrorShort));
+      }
+    }
+
+    if (Array.isArray(schema.oneOf)) {
+      const targets = schema.oneOf.map((branch) => branchTarget(branch, root));
+      const typed = targets.filter((target) => isObject(target) && isObject(target.properties) &&
+        isObject(target.properties.type) && Object.prototype.hasOwnProperty.call(target.properties.type, "const"));
+
+      // Element variants are discriminated by "type". This special case produces
+      // actionable diagnostics for the chosen element instead of ten branch summaries.
+      if (typed.length >= 3 && isObject(value)) {
+        const typeValue = value.type;
+        if (typeof typeValue !== "string") {
+          addError(errors, path, "Every element needs a supported string \"type\" property.");
+        } else {
+          const match = targets.find((target) => isObject(target) && isObject(target.properties) &&
+            target.properties.type && target.properties.type.const === typeValue);
+          if (!match) {
+            const allowed = typed.map((target) => target.properties.type.const).join(", ");
+            addError(errors, path, "Unsupported element type \"" + typeValue + "\". Allowed: " + allowed + ".");
+          } else {
+            validateNode(value, match, root, path, errors, depth + 1);
+          }
+        }
+      } else {
+        const branches = schema.oneOf.map((part) => {
+          const branchErrors = [];
+          validateNode(value, part, root, path, branchErrors, depth + 1);
+          return branchErrors;
+        });
+        const passing = branches.filter((branchErrors) => branchErrors.length === 0).length;
+        if (passing !== 1) {
+          const best = branches.reduce((a, b) => b.length < a.length ? b : a, branches[0] || []);
+          const message = passing === 0
+            ? "Value does not match any allowed form (a hex color, gradient reference, or gradient definition)."
+            : "Value matches more than one allowed form; make the value unambiguous.";
+          addError(errors, path, message, best.slice(0, 4).map(formatErrorShort));
+        }
+      }
+    }
+
+    if (typeof schema.type === "string" && !typeMatches(value, schema.type)) {
+      const actual = Array.isArray(value) ? "array" : value === null ? "null" : typeof value;
+      addError(errors, path, "Expected " + schema.type + ", received " + actual + ".");
+    }
+
+    if (typeof value === "number") {
+      if (!Number.isFinite(value)) addError(errors, path, "Number must be finite.");
+      if (typeof schema.minimum === "number" && value < schema.minimum) addError(errors, path, "Must be at least " + schema.minimum + ".");
+      if (typeof schema.maximum === "number" && value > schema.maximum) addError(errors, path, "Must be at most " + schema.maximum + ".");
+      if (typeof schema.exclusiveMinimum === "number" && value <= schema.exclusiveMinimum) addError(errors, path, "Must be greater than " + schema.exclusiveMinimum + ".");
+      if (typeof schema.exclusiveMaximum === "number" && value >= schema.exclusiveMaximum) addError(errors, path, "Must be less than " + schema.exclusiveMaximum + ".");
+    }
+
+    if (typeof value === "string") {
+      const length = stringLength(value);
+      if (typeof schema.minLength === "number" && length < schema.minLength) addError(errors, path, "Must contain at least " + schema.minLength + " characters.");
+      if (typeof schema.maxLength === "number" && length > schema.maxLength) addError(errors, path, "Must contain at most " + schema.maxLength + " characters.");
+      if (typeof schema.pattern === "string") {
+        try {
+          if (!new RegExp(schema.pattern, "u").test(value)) addError(errors, path, "String does not match the required format.");
+        } catch (_) {
+          addError(errors, path, "Runtime cannot compile the schema pattern.");
+        }
+      }
+    }
+
+    if (Array.isArray(value)) {
+      if (typeof schema.minItems === "number" && value.length < schema.minItems) addError(errors, path, "Must contain at least " + schema.minItems + " items.");
+      if (typeof schema.maxItems === "number" && value.length > schema.maxItems) addError(errors, path, "Must contain at most " + schema.maxItems + " items.");
+      if (schema.items && !Array.isArray(schema.items)) {
+        for (let i = 0; i < value.length; i++) validateNode(value[i], schema.items, root, path + "[" + i + "]", errors, depth + 1);
+      }
+      if (schema.uniqueItems) {
+        for (let i = 0; i < value.length; i++) {
+          for (let j = i + 1; j < value.length; j++) {
+            if (deepEqual(value[i], value[j])) addError(errors, path, "Array items must be unique (items " + i + " and " + j + " match).");
+          }
+        }
+      }
+    }
+
+    if (isObject(value)) {
+      const keys = Object.keys(value);
+      if (typeof schema.minProperties === "number" && keys.length < schema.minProperties) addError(errors, path, "Must contain at least " + schema.minProperties + " properties.");
+      if (typeof schema.maxProperties === "number" && keys.length > schema.maxProperties) addError(errors, path, "Must contain at most " + schema.maxProperties + " properties.");
+      if (Array.isArray(schema.required)) {
+        for (const key of schema.required) {
+          if (!Object.prototype.hasOwnProperty.call(value, key)) addError(errors, path, "Missing required property \"" + key + "\".");
+        }
+      }
+      const properties = isObject(schema.properties) ? schema.properties : {};
+      for (const key of keys) {
+        const childPath = joinPath(path, key);
+        if (schema.propertyNames) validateNode(key, schema.propertyNames, root, childPath + " (name)", errors, depth + 1);
+        if (Object.prototype.hasOwnProperty.call(properties, key)) {
+          validateNode(value[key], properties[key], root, childPath, errors, depth + 1);
+        } else if (schema.additionalProperties === false) {
+          addError(errors, childPath, "Unknown property \"" + key + "\"; the protocol is strict.");
+        } else if (isObject(schema.additionalProperties)) {
+          validateNode(value[key], schema.additionalProperties, root, childPath, errors, depth + 1);
+        }
+      }
+    }
+  }
+
+  function checkFinite(value, path, errors) {
+    if (typeof value === "number" && !Number.isFinite(value)) {
+      addError(errors, path, "Number must be finite; values such as 1e999 are rejected.");
+    } else if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) checkFinite(value[i], path + "[" + i + "]", errors);
+    } else if (isObject(value)) {
+      for (const [key, child] of Object.entries(value)) checkFinite(child, joinPath(path, key), errors);
+    }
+  }
+
+  const PATH_COMMANDS = "MmLlHhVvCcQqZz";
+  const PATH_NUMBER_TOKEN = "[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?";
+  const PATH_TOKEN_RE = new RegExp("[" + PATH_COMMANDS + "]|" + PATH_NUMBER_TOKEN, "g");
+  const PATH_ALLOWED_RE = /^[MmLlHhVvCcQqZz0-9eE+\-., \t\r\n]+$/;
+
+  function parsePathData(input) {
+    if (typeof input !== "string") throw new Error("Path data must be a string.");
+    if (input.length > LIMITS.MAX_PATH_CHARS) throw new Error("Path data exceeds " + LIMITS.MAX_PATH_CHARS + " characters.");
+    if (!PATH_ALLOWED_RE.test(input)) throw new Error("Path contains a character outside the restricted grammar.");
+    const compact = input.replace(/[\s,]/g, "");
+    const tokens = input.match(PATH_TOKEN_RE) || [];
+    if (tokens.join("") !== compact) throw new Error("Path contains malformed numbers or unsupported SVG path commands.");
+    if (tokens.length === 0 || !/^[Mm]$/.test(tokens[0])) throw new Error("Path must begin with M or m.");
+
+    const arity = { M: 2, L: 2, H: 1, V: 1, C: 6, Q: 4, Z: 0, m: 2, l: 2, h: 1, v: 1, c: 6, q: 4, z: 0 };
+    const commands = [];
+    let i = 0;
+    let current = [0, 0];
+    let start = [0, 0];
+
+    while (i < tokens.length) {
+      const token = tokens[i++];
+      if (!/^[MmLlHhVvCcQqZz]$/.test(token)) {
+        throw new Error("Expected an explicit command letter at path token " + (i - 1) + "; implicit command repetition is not supported.");
+      }
+      const relative = token === token.toLowerCase();
+      const base = token.toUpperCase();
+      const count = arity[token];
+      const values = [];
+      for (let j = 0; j < count; j++) {
+        const raw = tokens[i++];
+        if (raw === undefined || /^[MmLlHhVvCcQqZz]$/.test(raw)) {
+          throw new Error("Command " + token + " requires " + count + " numeric arguments.");
+        }
+        const number = Number(raw);
+        if (!Number.isFinite(number) || Math.abs(number) > LIMITS.MAX_PATH_NUMBER) {
+          throw new Error("Path number is non-finite or exceeds the numeric magnitude limit.");
+        }
+        values.push(number);
+      }
+
+      const cx = current[0], cy = current[1];
+      let next = current;
+      let output = [];
+      if (base === "M") {
+        next = [relative ? cx + values[0] : values[0], relative ? cy + values[1] : values[1]];
+        start = next;
+        output = next;
+      } else if (base === "L") {
+        next = [relative ? cx + values[0] : values[0], relative ? cy + values[1] : values[1]];
+        output = next;
+      } else if (base === "H") {
+        next = [relative ? cx + values[0] : values[0], cy];
+        output = next;
+      } else if (base === "V") {
+        next = [cx, relative ? cy + values[0] : values[0]];
+        output = next;
+      } else if (base === "C") {
+        const p1 = [relative ? cx + values[0] : values[0], relative ? cy + values[1] : values[1]];
+        const p2 = [relative ? cx + values[2] : values[2], relative ? cy + values[3] : values[3]];
+        const p3 = [relative ? cx + values[4] : values[4], relative ? cy + values[5] : values[5]];
+        next = p3;
+        output = [p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]];
+      } else if (base === "Q") {
+        const p1 = [relative ? cx + values[0] : values[0], relative ? cy + values[1] : values[1]];
+        const p2 = [relative ? cx + values[2] : values[2], relative ? cy + values[3] : values[3]];
+        next = p2;
+        output = [p1[0], p1[1], p2[0], p2[1]];
+      } else if (base === "Z") {
+        next = start;
+        output = [];
+      }
+      current = next;
+      commands.push({ op: base, values: output });
+      if (commands.length > LIMITS.MAX_PATH_COMMANDS_EACH) {
+        throw new Error("Path exceeds " + LIMITS.MAX_PATH_COMMANDS_EACH + " commands.");
+      }
+    }
+    return commands;
+  }
+
+  function validateSemantics(doc, errors) {
+    if (!isObject(doc) || !isObject(doc.canvas) || !Array.isArray(doc.elements)) return;
+    const gradients = isObject(doc.gradients) ? doc.gradients : {};
+    const gradientNames = new Set(Object.keys(gradients));
+    let units = 0;
+    for (const definition of Object.values(gradients)) {
+      units += 2 + (Array.isArray(definition.stops) ? definition.stops.length * 2 : 0);
+    }
+
+    function checkPaint(paint, path) {
+      if (isObject(paint) && typeof paint.gradient === "string" && !gradientNames.has(paint.gradient)) {
+        addError(errors, path, "Gradient reference \"" + paint.gradient + "\" is not defined in top-level gradients.");
+      }
+    }
+    checkPaint(doc.canvas.background, "$.canvas.background");
+
+    const width = doc.canvas.width, height = doc.canvas.height;
+    if (typeof width === "number" && typeof height === "number" && width * height > LIMITS.MAX_CANVAS_PIXELS) {
+      addError(errors, "$.canvas", "Canvas area exceeds " + LIMITS.MAX_CANVAS_PIXELS.toLocaleString() + " logical pixels.");
+    }
+
+    const ids = new Set();
+    let total = 0;
+    let pathCommands = 0;
+
+    function walk(elements, path, depth) {
+      if (depth > LIMITS.MAX_NESTING) {
+        addError(errors, path, "Group nesting exceeds " + LIMITS.MAX_NESTING + " levels.");
+        return;
+      }
+      for (let i = 0; i < elements.length; i++) {
+        const element = elements[i];
+        const elementPath = path + "[" + i + "]";
+        total += 1;
+        units += 1;
+        if (ids.has(element.id)) addError(errors, elementPath + ".id", "Duplicate element id \"" + element.id + "\".");
+        ids.add(element.id);
+        checkPaint(element.fill, elementPath + ".fill");
+        checkPaint(element.stroke, elementPath + ".stroke");
+        if (Array.isArray(element.points)) units += element.points.length * 2;
+        if (Array.isArray(element.dash)) units += element.dash.length;
+        if (element.transform) units += 2;
+        if (element.type === "path") {
+          try {
+            const commands = parsePathData(element.d);
+            pathCommands += commands.length;
+            units += commands.length * 8;
+          } catch (error) {
+            addError(errors, elementPath + ".d", error.message);
+          }
+        }
+        if (element.type === "text" && typeof element.text === "string") {
+          const lines = element.text.split(/\r?\n/).length;
+          units += lines * 6;
+          if (lines > LIMITS.MAX_TEXT_LINES) addError(errors, elementPath + ".text", "Text exceeds " + LIMITS.MAX_TEXT_LINES + " lines.");
+        }
+        if (element.type === "group" && Array.isArray(element.children)) {
+          walk(element.children, elementPath + ".children", depth + 1);
+        }
+      }
+    }
+    walk(doc.elements, "$.elements", 1);
+
+    if (total > LIMITS.MAX_TOTAL_ELEMENTS) addError(errors, "$.elements", "Recursive element count " + total + " exceeds " + LIMITS.MAX_TOTAL_ELEMENTS + ".");
+    if (pathCommands > LIMITS.MAX_PATH_COMMANDS_TOTAL) addError(errors, "$.elements", "Total path commands " + pathCommands + " exceeds " + LIMITS.MAX_PATH_COMMANDS_TOTAL + ".");
+    if (units > LIMITS.MAX_COMPLEXITY) addError(errors, "$", "Complexity budget " + units + " exceeds " + LIMITS.MAX_COMPLEXITY + ".");
+    return units;
+  }
+
+  function validateDocument(doc, schema) {
+    const activeSchema = schema || API.SCHEMA;
+    if (!isObject(activeSchema)) throw new Error("Protocol schema is not loaded.");
+    const errors = [];
+    checkFinite(doc, "$", errors);
+    validateNode(doc, activeSchema, activeSchema, "$", errors, 0);
+    if (errors.length === 0) validateSemantics(doc, errors);
+    return errors;
+  }
+
+  function documentStats(doc) {
+    let elements = 0;
+    let units = 0;
+    const gradients = isObject(doc.gradients) ? Object.values(doc.gradients) : [];
+    for (const definition of gradients) units += 2 + (Array.isArray(definition.stops) ? definition.stops.length * 2 : 0);
+    function walk(list) {
+      for (const element of list) {
+        elements += 1;
+        units += 1;
+        if (Array.isArray(element.points)) units += element.points.length * 2;
+        if (Array.isArray(element.dash)) units += element.dash.length;
+        if (element.transform) units += 2;
+        if (element.type === "path") {
+          try { units += parsePathData(element.d).length * 8; } catch (_) { units += 1024; }
+        }
+        if (element.type === "text" && typeof element.text === "string") units += element.text.split(/\r?\n/).length * 6;
+        if (element.type === "group" && Array.isArray(element.children)) walk(element.children);
+      }
+    }
+    walk(Array.isArray(doc.elements) ? doc.elements : []);
+    return {
+      elements,
+      gradients: gradients.length,
+      complexity: units,
+      width: doc.canvas && doc.canvas.width,
+      height: doc.canvas && doc.canvas.height
+    };
+  }
+
+  function extractJsonText(raw) {
+    let text = String(raw == null ? "" : raw).replace(/^\uFEFF/, "").trim();
+    if (!text) throw new Error("The JSON editor is empty. Paste a document or load an example.");
+    if (text.length > LIMITS.MAX_JSON_CHARS) {
+      throw new Error("JSON input exceeds " + LIMITS.MAX_JSON_CHARS + " characters. Simplify the composition.");
+    }
+    const fenced = text.match(/^```(?:json)?[ \t]*\r?\n?([\s\S]*?)\r?\n?```$/i);
+    if (fenced) {
+      text = fenced[1].trim();
+    } else if (text.startsWith("```")) {
+      throw new Error("Unbalanced Markdown code fence. Wrap the complete JSON document in one fenced json block, or remove the fence.");
+    }
+    return text;
+  }
+
+  function syntaxDetails(text, originalMessage) {
+    const lines = text.split(/\r?\n/);
+    let line = null, column = null;
+    const positionMatch = originalMessage.match(/position\s+(\d+)/i);
+    const lineMatch = originalMessage.match(/line\s+(\d+)\s+column\s+(\d+)/i);
+    if (positionMatch) {
+      const position = Math.min(Number(positionMatch[1]), text.length);
+      line = text.slice(0, position).split(/\r?\n/).length;
+      const lastBreak = text.lastIndexOf("\n", position - 1);
+      column = position - lastBreak;
+    } else if (lineMatch) {
+      line = Number(lineMatch[1]);
+      column = Number(lineMatch[2]);
+    }
+    const details = ["Check commas, quotes, brackets, and remove prose outside the JSON."];
+    if (line && column) {
+      const source = (lines[line - 1] || "").slice(0, 140);
+      details.unshift("Location: line " + line + ", column " + column + ".");
+      details.push("Near: " + (source || "(end of input)"));
+    }
+    return details;
+  }
+
+  function parseJsonInput(raw) {
+    const text = extractJsonText(raw);
+    let doc;
+    try {
+      doc = JSON.parse(text);
+    } catch (error) {
+      const friendly = new Error("JSON syntax error: " + error.message);
+      friendly.details = syntaxDetails(text, error.message);
+      throw friendly;
+    }
+    if (!isObject(doc) || Array.isArray(doc)) {
+      throw new Error("The root value must be a JSON object containing protocol, canvas, and elements.");
+    }
+    return doc;
+  }
+
+  function makePaintStyle(ctx, paint, doc, path) {
+    if (typeof paint === "string") return paint;
+    if (!isObject(paint) || typeof paint.gradient !== "string") throw new Error("Invalid paint value at " + path + ".");
+    const definition = isObject(doc.gradients) ? doc.gradients[paint.gradient] : null;
+    if (!definition) throw new Error("Undefined gradient \"" + paint.gradient + "\" at " + path + ".");
+    let style;
+    if (definition.type === "linear") {
+      style = ctx.createLinearGradient(definition.x1, definition.y1, definition.x2, definition.y2);
+    } else if (definition.type === "radial") {
+      style = ctx.createRadialGradient(definition.cx, definition.cy, 0, definition.cx, definition.cy, definition.r);
+    } else {
+      throw new Error("Unsupported gradient type at " + path + ".");
+    }
+    for (const stop of definition.stops) style.addColorStop(stop.offset, stop.color);
+    return style;
+  }
+
+  function applyTransform(ctx, transform) {
+    if (!transform) return;
+    const translate = Array.isArray(transform.translate) ? transform.translate : [0, 0];
+    const origin = Array.isArray(transform.origin) ? transform.origin : [0, 0];
+    const scale = Array.isArray(transform.scale) ? transform.scale : [1, 1];
+    const rotate = typeof transform.rotate === "number" ? transform.rotate : 0;
+    ctx.translate(translate[0], translate[1]);
+    ctx.translate(origin[0], origin[1]);
+    ctx.rotate(rotate * Math.PI / 180);
+    ctx.scale(scale[0], scale[1]);
+    ctx.translate(-origin[0], -origin[1]);
+  }
+
+  function configureStyle(ctx, element, doc, path) {
+    ctx.lineWidth = typeof element.strokeWidth === "number" ? element.strokeWidth : 1;
+    ctx.lineCap = element.lineCap || "butt";
+    ctx.lineJoin = element.lineJoin || "miter";
+    if (typeof ctx.setLineDash === "function") ctx.setLineDash(Array.isArray(element.dash) ? element.dash : []);
+    if (element.shadow) {
+      ctx.shadowColor = element.shadow.color;
+      ctx.shadowBlur = element.shadow.blur;
+      ctx.shadowOffsetX = typeof element.shadow.offsetX === "number" ? element.shadow.offsetX : 0;
+      ctx.shadowOffsetY = typeof element.shadow.offsetY === "number" ? element.shadow.offsetY : 0;
+    } else {
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
+    const style = { fill: false, stroke: false };
+    if (element.fill !== undefined) {
+      ctx.fillStyle = makePaintStyle(ctx, element.fill, doc, path + ".fill");
+      style.fill = true;
+    }
+    if (element.stroke !== undefined) {
+      ctx.strokeStyle = makePaintStyle(ctx, element.stroke, doc, path + ".stroke");
+      style.stroke = true;
+    }
+    return style;
+  }
+
+  function fillAndStroke(ctx, style) {
+    if (style.fill) ctx.fill();
+    if (style.stroke) ctx.stroke();
+  }
+
+  function roundedRectPath(ctx, x, y, width, height, radius) {
+    const r = Math.max(0, Math.min(radius, Math.min(width, height) / 2));
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + width - r, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+    ctx.lineTo(x + width, y + height - r);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+    ctx.lineTo(x + r, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function drawPathCommands(ctx, commands) {
+    ctx.beginPath();
+    for (const command of commands) {
+      const v = command.values;
+      switch (command.op) {
+        case "M": ctx.moveTo(v[0], v[1]); break;
+        case "L": case "H": case "V": ctx.lineTo(v[0], v[1]); break;
+        case "C": ctx.bezierCurveTo(v[0], v[1], v[2], v[3], v[4], v[5]); break;
+        case "Q": ctx.quadraticCurveTo(v[0], v[1], v[2], v[3]); break;
+        case "Z": ctx.closePath(); break;
+        default: throw new Error("Unsupported internal path operation.");
+      }
+    }
+  }
+
+  function drawText(ctx, element, style) {
+    const fontSize = typeof element.fontSize === "number" ? element.fontSize : 32;
+    const family = element.fontFamily || "sans-serif";
+    const weight = element.fontWeight || "normal";
+    const fontStyle = element.fontStyle || "normal";
+    ctx.font = fontStyle + " " + weight + " " + fontSize + "px " + family;
+    ctx.textAlign = element.align || "left";
+    ctx.textBaseline = element.baseline || "alphabetic";
+    const lineHeight = (typeof element.lineHeight === "number" ? element.lineHeight : 1.2) * fontSize;
+    const maxWidth = typeof element.maxWidth === "number" ? element.maxWidth : undefined;
+    const lines = element.text.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+      const y = element.y + i * lineHeight;
+      if (style.stroke) ctx.strokeText(lines[i], element.x, y, maxWidth);
+      if (style.fill) ctx.fillText(lines[i], element.x, y, maxWidth);
+    }
+  }
+
+  function renderElement(ctx, element, doc, inheritedAlpha, path) {
+    if (element.visible === false) return;
+    const alpha = inheritedAlpha * (typeof element.opacity === "number" ? element.opacity : 1);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    applyTransform(ctx, element.transform);
+
+    if (element.type === "group") {
+      for (let i = 0; i < element.children.length; i++) {
+        renderElement(ctx, element.children[i], doc, alpha, path + ".children[" + i + "]");
+      }
+      ctx.restore();
+      return;
+    }
+
+    const style = configureStyle(ctx, element, doc, path);
+    ctx.beginPath();
+    switch (element.type) {
+      case "rectangle":
+        ctx.rect(element.x, element.y, element.width, element.height);
+        fillAndStroke(ctx, style);
+        break;
+      case "rounded-rectangle":
+        roundedRectPath(ctx, element.x, element.y, element.width, element.height, element.radius);
+        fillAndStroke(ctx, style);
+        break;
+      case "circle":
+        ctx.arc(element.x, element.y, element.radius, 0, Math.PI * 2);
+        fillAndStroke(ctx, style);
+        break;
+      case "ellipse":
+        if (typeof ctx.ellipse === "function") {
+          ctx.ellipse(element.x, element.y, element.radiusX, element.radiusY, 0, 0, Math.PI * 2);
+          fillAndStroke(ctx, style);
+        } else {
+          ctx.save();
+          ctx.translate(element.x, element.y);
+          ctx.scale(element.radiusX, element.radiusY);
+          ctx.beginPath();
+          ctx.arc(0, 0, 1, 0, Math.PI * 2);
+          fillAndStroke(ctx, style);
+          ctx.restore();
+        }
+        break;
+      case "line":
+        ctx.moveTo(element.x1, element.y1);
+        ctx.lineTo(element.x2, element.y2);
+        fillAndStroke(ctx, style);
+        break;
+      case "polyline":
+      case "polygon": {
+        const points = element.points;
+        ctx.moveTo(points[0][0], points[0][1]);
+        for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+        if (element.type === "polygon") ctx.closePath();
+        fillAndStroke(ctx, style);
+        break;
+      }
+      case "path":
+        drawPathCommands(ctx, parsePathData(element.d));
+        fillAndStroke(ctx, style);
+        break;
+      case "text":
+        drawText(ctx, element, style);
+        break;
+      default:
+        throw new Error("Unsupported element type \"" + element.type + "\".");
+    }
+    ctx.restore();
+  }
+
+  function renderDocument(doc, canvas, options) {
+    const opts = options || {};
+    const scale = typeof opts.scale === "number" ? opts.scale : 1;
+    if (!opts.skipValidation) {
+      const errors = validateDocument(doc, opts.schema);
+      if (errors.length) {
+        const error = new Error("Document failed validation; rendering was stopped.");
+        error.details = errors.slice(0, 8).map(formatErrorShort);
+        throw error;
+      }
+    }
+    if (!canvas || typeof canvas.getContext !== "function") throw new Error("A Canvas element is required for rendering.");
+    if (!Number.isFinite(scale) || scale <= 0 || scale > 2) throw new Error("Render scale must be greater than 0 and at most 2.");
+    if (!isObject(doc) || !isObject(doc.canvas) || !Array.isArray(doc.elements)) throw new Error("Document is missing canvas or elements.");
+
+    const width = doc.canvas.width, height = doc.canvas.height;
+    const physicalWidth = Math.round(width * scale), physicalHeight = Math.round(height * scale);
+    if (physicalWidth > LIMITS.MAX_EXPORT_DIMENSION || physicalHeight > LIMITS.MAX_EXPORT_DIMENSION || physicalWidth * physicalHeight > LIMITS.MAX_EXPORT_PIXELS) {
+      throw new Error("Export dimensions exceed the renderer's memory limit. Choose 1× or reduce the canvas.");
+    }
+
+    canvas.width = physicalWidth;
+    canvas.height = physicalHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("This browser could not create a 2D Canvas context.");
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, physicalWidth, physicalHeight);
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    if ("imageSmoothingEnabled" in ctx) ctx.imageSmoothingEnabled = true;
+    if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+
+    ctx.save();
+    ctx.fillStyle = makePaintStyle(ctx, doc.canvas.background, doc, "$.canvas.background");
+    ctx.fillRect(0, 0, width, height);
+    for (let i = 0; i < doc.elements.length; i++) {
+      const path = "$.elements[" + i + "]";
+      try {
+        renderElement(ctx, doc.elements[i], doc, 1, path);
+      } catch (error) {
+        const wrapped = new Error("Could not render " + path + ": " + error.message);
+        wrapped.details = error.details;
+        throw wrapped;
+      }
+    }
+    ctx.restore();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    return {
+      width: physicalWidth,
+      height: physicalHeight,
+      logicalWidth: width,
+      logicalHeight: height,
+      scale,
+      elements: documentStats(doc).elements
+    };
+  }
+
+  function $(id) { return document.getElementById(id); }
+
+  function setStatus(kind, message) {
+    const status = state.dom.validationStatus;
+    status.dataset.state = kind;
+    status.textContent = message;
+  }
+
+  function showToast(message) {
+    const toast = state.dom.toast;
+    toast.textContent = message;
+    toast.classList.add("visible");
+    clearTimeout(state.toastTimer);
+    state.toastTimer = setTimeout(() => toast.classList.remove("visible"), 2800);
+  }
+
+  function makeElement(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function showErrors(summary, items) {
+    const list = state.dom.errorList;
+    list.replaceChildren();
+    state.dom.errorSummary.textContent = summary;
+    state.dom.errorDetails.hidden = false;
+    for (const item of items.slice(0, 20)) {
+      const li = makeElement("li");
+      const path = item.path && item.path !== "$" ? item.path + " — " : "";
+      if (path) li.append(makeElement("span", "error-path", path));
+      li.append(document.createTextNode(item.message));
+      if (Array.isArray(item.details) && item.details.length) {
+        const details = makeElement("ul");
+        for (const detail of item.details.slice(0, 6)) details.append(makeElement("li", "", detail));
+        li.append(details);
+      }
+      list.append(li);
+    }
+    if (items.length > 20) list.append(makeElement("li", "", "…and " + (items.length - 20) + " more issues. Fix the first diagnostics and validate again."));
+  }
+
+  function hideErrors() {
+    state.dom.errorDetails.hidden = true;
+    state.dom.errorList.replaceChildren();
+  }
+
+  function showOperationError(title, error) {
+    const message = error && error.message ? error.message : String(error || "Unknown browser error.");
+    setStatus("error", title + ": " + message);
+    const details = error && Array.isArray(error.details) ? error.details : [];
+    showErrors(title, [{ path: "$", message, details }]);
+  }
+
+  function updateStats(doc) {
+    const stats = documentStats(doc);
+    state.dom.statElements.textContent = String(stats.elements);
+    state.dom.statSize.textContent = stats.width + " × " + stats.height;
+    state.dom.statGradients.textContent = String(stats.gradients);
+    state.dom.statOrder.textContent = stats.complexity + " units";
+  }
+
+  function clearStats() {
+    state.dom.statElements.textContent = "—";
+    state.dom.statSize.textContent = "—";
+    state.dom.statGradients.textContent = "—";
+    state.dom.statOrder.textContent = "array order";
+  }
+
+  function syncActions() {
+    state.dom.renderBtn.disabled = !state.currentDoc;
+    state.dom.exportPng.disabled = !state.currentDoc;
+  }
+
+  function validateEditor(options) {
+    const opts = options || {};
+    clearTimeout(state.validationTimer);
+    const raw = state.dom.jsonInput.value;
+    if (!raw.trim()) {
+      state.currentDoc = null;
+      syncActions();
+      clearStats();
+      if (opts.auto) {
+        setStatus("idle", "Paste or upload a JSON document to begin.");
+        hideErrors();
+      } else {
+        showOperationError("Validation failed", new Error("The JSON editor is empty. Paste a document or load an example."));
+      }
+      return { ok: false };
+    }
+    let doc, errors;
+    try {
+      doc = parseJsonInput(raw);
+      errors = validateDocument(doc);
+    } catch (error) {
+      state.currentDoc = null;
+      syncActions();
+      clearStats();
+      setStatus("error", "Invalid JSON. See diagnostics below.");
+      showErrors("Parsing diagnostics", [{ path: "$", message: error.message, details: error.details }]);
+      return { ok: false, error };
+    }
+    if (errors.length) {
+      state.currentDoc = null;
+      syncActions();
+      clearStats();
+      setStatus("error", "Invalid document — " + errors.length + " issue" + (errors.length === 1 ? "" : "s") + " found.");
+      showErrors("Validation diagnostics", errors);
+      return { ok: false, errors };
+    }
+    state.currentDoc = doc;
+    syncActions();
+    updateStats(doc);
+    hideErrors();
+    setStatus("valid", "Valid coordinate-image-v1 document. Rendering is available.");
+    if (opts.announce) showToast("Document is valid.");
+    return { ok: true, doc };
+  }
+
+  function scheduleValidation() {
+    clearTimeout(state.validationTimer);
+    state.currentDoc = null;
+    state.activeExample = null;
+    updateExampleSelection();
+    syncActions();
+    if (!state.dom.jsonInput.value.trim()) {
+      clearStats();
+      hideErrors();
+      setStatus("idle", "Paste or upload a JSON document to begin.");
+      return;
+    }
+    setStatus("working", "Changes detected — validating locally…");
+    state.validationTimer = setTimeout(() => validateEditor({ announce: false, auto: true }), 450);
+  }
+
+  function clearPreview() {
+    const canvas = state.dom.previewCanvas;
+    canvas.width = 960;
+    canvas.height = 640;
+    const ctx = canvas.getContext("2d");
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    state.dom.canvasEmpty.hidden = false;
+    state.dom.renderInfo.textContent = "No image rendered yet.";
+    state.dom.renderFilename.textContent = "—";
+  }
+
+  function setView(view) {
+    state.dom.workspace.dataset.view = view;
+    for (const button of state.dom.navButtons) button.setAttribute("aria-pressed", String(button.dataset.viewTarget === view));
+  }
+
+  function renderCurrent(options) {
+    const opts = options || {};
+    const result = validateEditor({ announce: false });
+    if (!result.ok) return false;
+    try {
+      const info = renderDocument(result.doc, state.dom.previewCanvas, { scale: 1 });
+      state.dom.canvasEmpty.hidden = true;
+      state.dom.renderInfo.textContent = "Rendered " + info.elements + " elements at " + info.logicalWidth + " × " + info.logicalHeight + " logical pixels.";
+      state.dom.renderFilename.textContent = safeFilename(result.doc, ".png");
+      setStatus("valid", "Image rendered. PNG export and JSON download are ready.");
+      if (opts.switchView !== false) setView("preview");
+      if (opts.announce !== false) showToast("Image rendered.");
+      return true;
+    } catch (error) {
+      showOperationError("Rendering failed", error);
+      return false;
+    }
+  }
+
+  function updateExampleSelection() {
+    for (const button of state.dom.exampleGrid.querySelectorAll(".example-card")) {
+      button.setAttribute("aria-pressed", String(button.dataset.exampleKey === state.activeExample));
+    }
+  }
+
+  function buildExampleGallery() {
+    state.dom.exampleGrid.replaceChildren();
+    for (const [key, doc] of Object.entries(API.EXAMPLES)) {
+      const title = doc.metadata && doc.metadata.title ? doc.metadata.title : key;
+      const description = doc.metadata && doc.metadata.description ? doc.metadata.description : "coordinate-image-v1 example";
+      const button = makeElement("button", "example-card");
+      button.type = "button";
+      button.dataset.exampleKey = key;
+      button.setAttribute("aria-pressed", "false");
+      button.setAttribute("aria-label", "Load example: " + title);
+      const thumb = makeElement("div", "example-thumb");
+      const canvas = document.createElement("canvas");
+      canvas.setAttribute("role", "img");
+      canvas.setAttribute("aria-label", "Preview of " + title);
+      try {
+        renderDocument(doc, canvas, { scale: 1 });
+      } catch (error) {
+        thumb.textContent = "Preview unavailable";
+      }
+      if (!thumb.textContent) thumb.append(canvas);
+      const info = makeElement("div", "example-info");
+      info.append(makeElement("strong", "", title));
+      info.append(makeElement("small", "", doc.canvas.width + " × " + doc.canvas.height + " · " + description));
+      button.append(thumb, info);
+      button.addEventListener("click", () => loadExample(key));
+      state.dom.exampleGrid.append(button);
+    }
+  }
+
+  function loadExample(key, options) {
+    const opts = options || {};
+    const doc = API.EXAMPLES[key];
+    if (!doc) {
+      showOperationError("Example unavailable", new Error("No embedded example named \"" + key + "\"."));
+      return;
+    }
+    clearTimeout(state.validationTimer);
+    state.dom.jsonInput.value = JSON.stringify(doc, null, 2);
+    state.dom.fileName.textContent = "Embedded example · " + key + ".json";
+    state.activeExample = key;
+    updateExampleSelection();
+    const result = validateEditor({ announce: false });
+    if (result.ok) renderCurrent({ switchView: opts.switchView !== false, announce: opts.announce !== false });
+  }
+
+  function safeFilename(doc, extension) {
+    const title = doc && isObject(doc.metadata) && typeof doc.metadata.title === "string" ? doc.metadata.title : "coordinate-image";
+    const slug = title.normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^A-Za-z0-9._-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/\.{2,}/g, ".")
+      .slice(0, 64)
+      .toLowerCase() || "coordinate-image";
+    return slug + extension;
+  }
+
+  function triggerDownload(href, filename) {
+    const link = document.createElement("a");
+    link.href = href;
+    link.download = filename;
+    link.style.display = "none";
+    document.body.append(link);
+    link.click();
+    link.remove();
+  }
+
+  function saveBlob(blob, filename) {
+    if (typeof URL === "undefined" || typeof URL.createObjectURL !== "function") {
+      throw new Error("This browser cannot create a local download. Try a current desktop or Android browser.");
+    }
+    const url = URL.createObjectURL(blob);
+    try {
+      triggerDownload(url, filename);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (error) {
+      URL.revokeObjectURL(url);
+      throw error;
+    }
+  }
+
+  async function copyText(text, label) {
+    if (!text) throw new Error("There is no text to copy.");
+    if (typeof navigator !== "undefined" && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast(label + " copied.");
+        return;
+      } catch (_) { /* fall through to the local selection-based method */ }
+    }
+    if (typeof document.execCommand !== "function") {
+      throw new Error("Clipboard access is blocked. Select the text and use your device's Copy command.");
+    }
+    const active = document.activeElement;
+    const helper = document.createElement("textarea");
+    helper.value = text;
+    helper.setAttribute("readonly", "");
+    helper.style.position = "fixed";
+    helper.style.left = "-9999px";
+    helper.style.opacity = "0";
+    document.body.append(helper);
+    helper.select();
+    let copied = false;
+    try { copied = document.execCommand("copy"); }
+    finally { helper.remove(); if (active && typeof active.focus === "function") active.focus(); }
+    if (!copied) throw new Error("Clipboard access is blocked. Select the text and use your device's Copy command.");
+    showToast(label + " copied.");
+  }
+
+  function readFileAsText(file) {
+    if (typeof file.text === "function") return file.text();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("The file could not be read locally."));
+      reader.readAsText(file);
+    });
+  }
+
+  function loadText(text, sourceLabel, options) {
+    const opts = options || {};
+    let parsed;
+    try { parsed = parseJsonInput(text); }
+    catch (error) { showOperationError("Import failed", error); return false; }
+    state.dom.jsonInput.value = JSON.stringify(parsed, null, 2);
+    state.dom.fileName.textContent = sourceLabel || "Local text";
+    state.activeExample = null;
+    updateExampleSelection();
+    const result = validateEditor({ announce: false });
+    if (result.ok && opts.render !== false) renderCurrent({ switchView: true, announce: true });
+    return result.ok;
+  }
+
+  async function handleFile(file) {
+    if (!file) return;
+    const jsonLike = /\.json$/i.test(file.name) || /json/i.test(file.type || "");
+    if (!jsonLike) {
+      showOperationError("Import failed", new Error("Choose a .json file or a file with an application/json type."));
+      return;
+    }
+    if (typeof file.size === "number" && file.size > LIMITS.MAX_JSON_BYTES) {
+      showOperationError("Import failed", new Error("The file exceeds 512 KiB. Simplify the composition and try again."));
+      return;
+    }
+    try {
+      const text = await readFileAsText(file);
+      const imported = loadText(text, "Local file · " + file.name, { render: true });
+      if (imported) showToast("File imported locally.");
+    } catch (error) {
+      showOperationError("Import failed", error);
+    } finally {
+      state.dom.fileInput.value = "";
+    }
+  }
+
+  function exportPng() {
+    if (!state.currentDoc) {
+      showOperationError("Export failed", new Error("Validate a document before exporting."));
+      return;
+    }
+    const scale = Number(state.dom.exportScale.value) || 1;
+    const canvas = document.createElement("canvas");
+    try {
+      renderDocument(state.currentDoc, canvas, { scale, skipValidation: true });
+      const filename = safeFilename(state.currentDoc, scale === 2 ? "@2x.png" : ".png");
+      if (typeof canvas.toBlob === "function") {
+        canvas.toBlob((blob) => {
+          try {
+            if (!blob) throw new Error("The browser could not encode a PNG from this canvas.");
+            saveBlob(blob, filename);
+            showToast("PNG downloaded: " + filename);
+          } catch (error) { showOperationError("Export failed", error); }
+        }, "image/png");
+      } else {
+        triggerDownload(canvas.toDataURL("image/png"), filename);
+        showToast("PNG downloaded: " + filename);
+      }
+    } catch (error) {
+      showOperationError("Export failed", error);
+    }
+  }
+
+  function downloadJson() {
+    try {
+      const doc = parseJsonInput(state.dom.jsonInput.value);
+      const text = JSON.stringify(doc, null, 2) + "\n";
+      const blob = new Blob([text], { type: "application/json;charset=utf-8" });
+      const filename = safeFilename(doc, ".json");
+      saveBlob(blob, filename);
+      showToast("JSON downloaded: " + filename);
+    } catch (error) {
+      showOperationError("Download failed", error);
+    }
+  }
+
+  function prettyPrint() {
+    try {
+      const doc = parseJsonInput(state.dom.jsonInput.value);
+      state.dom.jsonInput.value = JSON.stringify(doc, null, 2);
+      validateEditor({ announce: false });
+      showToast("JSON formatted.");
+    } catch (error) {
+      showOperationError("Formatting failed", error);
+    }
+  }
+
+  function clearEditor() {
+    clearTimeout(state.validationTimer);
+    state.dom.jsonInput.value = "";
+    state.dom.fileInput.value = "";
+    state.dom.fileName.textContent = "No file selected";
+    state.currentDoc = null;
+    state.activeExample = null;
+    updateExampleSelection();
+    syncActions();
+    clearStats();
+    clearPreview();
+    hideErrors();
+    setStatus("idle", "Editor cleared. Paste JSON, upload a file, or load an example.");
+    showToast("Editor cleared.");
+  }
+
+  function applyTheme(theme) {
+    const normalized = theme === "light" ? "light" : "dark";
+    document.documentElement.dataset.theme = normalized;
+    const button = state.dom.themeToggle;
+    button.setAttribute("aria-pressed", String(normalized === "dark"));
+    button.textContent = normalized === "dark" ? "Light theme" : "Dark theme";
+    button.setAttribute("aria-label", normalized === "dark" ? "Dark theme active. Switch to light theme." : "Light theme active. Switch to dark theme.");
+    try { localStorage.setItem("cie-theme", normalized); } catch (_) { /* private browsing may block storage */ }
+  }
+
+  function initialTheme() {
+    let saved = null;
+    try { saved = localStorage.getItem("cie-theme"); } catch (_) { /* ignored */ }
+    if (saved === "light" || saved === "dark") return saved;
+    if (typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+    return "dark";
+  }
+
+  function bindEvents() {
+    const d = state.dom;
+    d.themeToggle.addEventListener("click", () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
+    for (const button of d.navButtons) button.addEventListener("click", () => setView(button.dataset.viewTarget));
+    d.validateBtn.addEventListener("click", () => validateEditor({ announce: true }));
+    d.renderBtn.addEventListener("click", () => renderCurrent({ switchView: true, announce: true }));
+    d.formatBtn.addEventListener("click", prettyPrint);
+    d.copyJson.addEventListener("click", () => copyText(d.jsonInput.value, "JSON").catch((error) => showOperationError("Copy failed", error)));
+    d.downloadJson.addEventListener("click", downloadJson);
+    d.clearBtn.addEventListener("click", clearEditor);
+    d.resetBtn.addEventListener("click", () => loadExample(API.EXAMPLES["simple-landscape"] ? "simple-landscape" : Object.keys(API.EXAMPLES)[0]));
+    d.exportPng.addEventListener("click", exportPng);
+    d.copyPrompt.addEventListener("click", () => copyText(API.MASTER_PROMPT, "Master prompt").catch((error) => showOperationError("Copy failed", error)));
+    d.downloadPrompt.addEventListener("click", () => {
+      try {
+        saveBlob(new Blob([API.MASTER_PROMPT + "\n"], { type: "text/plain;charset=utf-8" }), "coordinate-image-engine-master-prompt.txt");
+        showToast("Master prompt downloaded.");
+      } catch (error) { showOperationError("Download failed", error); }
+    });
+    d.pasteBtn.addEventListener("click", async () => {
+      try {
+        if (typeof navigator === "undefined" || !navigator.clipboard || typeof navigator.clipboard.readText !== "function") {
+          throw new Error("This browser does not allow reading the clipboard here. Use the editor and Ctrl+V, Cmd+V, or long-press Paste.");
+        }
+        const text = await navigator.clipboard.readText();
+        const imported = loadText(text, "Pasted from clipboard", { render: true });
+        if (imported) showToast("Clipboard JSON imported and rendered.");
+      } catch (error) { showOperationError("Paste failed", error); }
+    });
+    d.fileInput.addEventListener("change", () => handleFile(d.fileInput.files && d.fileInput.files[0]));
+    d.jsonInput.addEventListener("input", scheduleValidation);
+    d.jsonInput.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        renderCurrent({ switchView: true, announce: true });
+      } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        downloadJson();
+      }
+    });
+    for (const eventName of ["dragenter", "dragover"]) {
+      d.dropZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+        d.dropZone.classList.add("drag-over");
+      });
+    }
+    d.dropZone.addEventListener("dragleave", (event) => {
+      if (!d.dropZone.contains(event.relatedTarget)) d.dropZone.classList.remove("drag-over");
+    });
+    d.dropZone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      d.dropZone.classList.remove("drag-over");
+      const files = event.dataTransfer && event.dataTransfer.files;
+      if (files && files.length) { handleFile(files[0]); return; }
+      const text = event.dataTransfer && event.dataTransfer.getData("text/plain");
+      if (text) loadText(text, "Dropped text", { render: true });
+    });
+  }
+
+  function initApp() {
+    if (state.initialized) return;
+    state.initialized = true;
+    let schema, examples;
+    try {
+      schema = JSON.parse($("protocol-schema").textContent);
+      examples = JSON.parse($("example-bundle").textContent);
+    } catch (error) {
+      const fallbackStatus = $("validation-status");
+      fallbackStatus.dataset.state = "error";
+      fallbackStatus.textContent = "The embedded protocol assets could not be read: " + error.message;
+      return;
+    }
+    setEmbeddedData(schema, examples, $("master-prompt").textContent);
+    state.dom = {
+      workspace: $("workspace"),
+      navButtons: Array.from(document.querySelectorAll("[data-view-target]")),
+      jsonInput: $("json-input"),
+      dropZone: $("drop-zone"),
+      fileInput: $("file-input"),
+      fileName: $("file-name"),
+      validateBtn: $("validate-btn"),
+      renderBtn: $("render-btn"),
+      formatBtn: $("format-btn"),
+      pasteBtn: $("paste-btn"),
+      copyJson: $("copy-json"),
+      downloadJson: $("download-json"),
+      clearBtn: $("clear-btn"),
+      resetBtn: $("reset-btn"),
+      validationStatus: $("validation-status"),
+      statElements: $("stat-elements"),
+      statSize: $("stat-size"),
+      statGradients: $("stat-gradients"),
+      statOrder: $("stat-order"),
+      errorDetails: $("error-details"),
+      errorSummary: $("error-summary"),
+      errorList: $("error-list"),
+      exampleGrid: $("example-grid"),
+      previewCanvas: $("preview-canvas"),
+      canvasEmpty: $("canvas-empty"),
+      renderInfo: $("render-info"),
+      renderFilename: $("render-filename"),
+      exportScale: $("export-scale"),
+      exportPng: $("export-png"),
+      themeToggle: $("theme-toggle"),
+      promptPreview: $("prompt-preview"),
+      copyPrompt: $("copy-prompt"),
+      downloadPrompt: $("download-prompt"),
+      toast: $("toast")
+    };
+    state.dom.promptPreview.value = API.MASTER_PROMPT;
+    applyTheme(initialTheme());
+    bindEvents();
+    buildExampleGallery();
+    const defaultKey = API.EXAMPLES["simple-landscape"] ? "simple-landscape" : Object.keys(API.EXAMPLES)[0];
+    if (defaultKey) loadExample(defaultKey, { switchView: false, announce: false });
+    else setStatus("idle", "No examples are embedded. Paste a coordinate-image-v1 document.");
+    document.documentElement.dataset.ready = "true";
+  }
+
+  Object.assign(API, {
+    setEmbeddedData,
+    validateDocument,
+    validateSemantics,
+    documentStats,
+    parseJsonInput,
+    parsePathData,
+    renderDocument,
+    formatErrorShort
+  });
+
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initApp, { once: true });
+    else initApp();
+  }
+})();
+
+  </script>
+</body>
+</html>
